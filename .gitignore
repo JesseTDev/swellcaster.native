@@ -1,0 +1,35 @@
+# Environment
+.env
+.env.local
+.env*.local
+
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native builds
+ios/
+android/
+
+# Testing
+coverage/
+*.coverage
+
+# Temporary files
+*.log
+*.tmp
+
+# OS
+.DS_Store
+
+# Secrets / signing
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision

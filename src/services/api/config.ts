@@ -1,0 +1,62 @@
+/**
+ * API Configuration
+ * Centralized configuration for API endpoints and settings
+ */
+
+import Constants from 'expo-constants';
+import * as Device from 'expo-device';
+
+const API_PORT = 5213;
+const DEFAULT_METRO_PORT = 8081;
+
+function getMetroHostAndPort(): { host: string; port: number } | null {
+  const hostUri =
+    Constants.expoConfig?.hostUri ??
+    Constants.linkingUri ??
+    Constants.expoGoConfig?.debuggerHost;
+
+  if (!hostUri) return null;
+
+  const stripped = hostUri.replace(/^https?:\/\//, '');
+  const [host, portStr] = stripped.split(':');
+  if (!host || host === 'localhost' || host === '127.0.0.1') return null;
+
+  const port = portStr ? Number.parseInt(portStr, 10) : DEFAULT_METRO_PORT;
+  return { host, port: Number.isNaN(port) ? DEFAULT_METRO_PORT : port };
+}
+
+function getDevBaseUrl(): string {
+  const envUrl = process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, '');
+  if (envUrl) return envUrl;
+
+  // Simulator/emulator shares the host loopback.
+  if (!Device.isDevice) {
+    return `http://localhost:${API_PORT}`;
+  }
+
+  // Physical device: route API calls through Metro (same host:port as Expo Go).
+  // Metro proxies /api/* to localhost:5213 — avoids macOS blocking direct :5213.
+  const metro = getMetroHostAndPort();
+  if (metro) {
+    return `http://${metro.host}:${metro.port}`;
+  }
+
+  return `http://localhost:${API_PORT}`;
+}
+
+export const API_CONFIG = {
+  BASE_URL: __DEV__ ? getDevBaseUrl() : 'https://your-production-api.com',
+  TIMEOUT: 10000,
+  ENDPOINTS: {
+    FORECAST: '/api/swell/forecast',
+    CURRENT: '/api/swell/current',
+    HOURLY: '/api/swell/hourly',
+    DAILY: '/api/swell/daily',
+    PLACES_SEARCH: '/api/places/search',
+    PLACES_SPOTS: '/api/places/spots',
+  },
+} as const;
+
+if (__DEV__) {
+  console.log('API base URL:', API_CONFIG.BASE_URL);
+}
