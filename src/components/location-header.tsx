@@ -4,6 +4,7 @@
 
 import { StyleSheet, View } from 'react-native';
 
+import type { SurfRating } from '@/services/api/types';
 import { ThemedText } from '@/components/themed-text';
 import { ConditionBadge } from '@/components/ui/condition-badge';
 
@@ -16,6 +17,7 @@ interface LocationHeaderProps {
   placeRegion?: string | null;
   swellHeightM: number;
   swellPeriodS?: number;
+  rating?: SurfRating | null;
   lastUpdated?: Date;
   testID?: string;
 }
@@ -26,6 +28,7 @@ export function LocationHeader({
   placeRegion,
   swellHeightM,
   swellPeriodS = 8,
+  rating,
   lastUpdated,
   testID,
 }: LocationHeaderProps) {
@@ -50,7 +53,11 @@ export function LocationHeader({
             </ThemedText>
           ) : null}
         </View>
-        <ConditionBadge swellHeightM={swellHeightM} swellPeriodS={swellPeriodS} />
+        <ConditionBadge
+          swellHeightM={swellHeightM}
+          swellPeriodS={swellPeriodS}
+          rating={rating}
+        />
       </View>
       {lastUpdated ? (
         <ThemedText themeColor="textSecondary" style={styles.time}>

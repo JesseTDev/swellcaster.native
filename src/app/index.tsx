@@ -37,7 +37,7 @@ import { useDeviceLocation } from '@/hooks/use-device-location';
 import { useSelectedLocationStore } from '@/stores/selected-location-store';
 import { formatCoordinates } from '@/utils/coordinates';
 import { formatDirection, formatDirectionFull } from '@/utils/forecast';
-import { formatSurfHeightRange } from '@/utils/surf-height';
+import { formatSurfHeightRangeFromConditions } from '@/utils/surf-height';
 import {
   formatWaveHeightFeet,
   formatWaveHeightValueFeet,
@@ -229,6 +229,7 @@ export default function LandingPage() {
           placeRegion={placeRegion}
           swellHeightM={swell.height}
           swellPeriodS={swell.period}
+          rating={current.rating}
           lastUpdated={lastUpdated}
           testID="location-header"
         />
@@ -249,7 +250,7 @@ export default function LandingPage() {
           </ThemedText>
           <View style={styles.heroRow}>
             <ThemedText style={styles.heroValue}>
-              {formatSurfHeightRange(swell.height, swell.period).replace(' ft', '')}
+              {formatSurfHeightRangeFromConditions(current.wave, swell).replace(' ft', '')}
             </ThemedText>
             <ThemedText themeColor="textSecondary" style={styles.heroUnit}>
               ft

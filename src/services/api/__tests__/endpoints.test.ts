@@ -145,18 +145,37 @@ describe('Swell API Endpoints', () => {
     });
   });
 
-  describe('getCuratedSpots', () => {
-    it('should call the curated spots endpoint', async () => {
+  describe('getSpotConditions', () => {
+    it('should call the curated spot conditions endpoint', async () => {
       const mockResponse = [
-        { id: 'noosa', name: 'Noosa Heads', lat: -26.3844, lon: 153.0911, region: 'Sunshine Coast, Australia' },
+        {
+          spot: {
+            id: 'noosa',
+            name: 'Noosa Heads',
+            lat: -26.3844,
+            lon: 153.0911,
+            region: 'Sunshine Coast, Australia',
+            shoreBearing: 75,
+            breakType: 'point',
+          },
+          conditions: {
+            timestamp: '2026-06-23T00:00:00Z',
+            wave: { height: 1.2 },
+            swell: { height: 1.5, direction: 90, period: 10 },
+            windWave: { height: 0.5, direction: 90 },
+            wind: { speedKnots: 8, direction: 270 },
+            waterTemperature: 22,
+            rating: 'good',
+          },
+        },
       ];
 
       (mockedApiClient.get as jest.Mock).mockResolvedValue({ data: mockResponse });
 
-      const result = await swellApi.getCuratedSpots();
+      const result = await swellApi.getSpotConditions();
 
-      expect(mockedApiClient.get).toHaveBeenCalledWith('/api/places/spots');
-      expect(result).toEqual(mockResponse);
+      expect(mockedApiClient.get).toHaveBeenCalledWith('/api/places/spots/conditions');
+      expect(result[0].conditions?.rating).toBe('good');
     });
   });
 });

@@ -12,7 +12,6 @@ import {
 } from './normalize';
 import type {
   CoordinatesParams,
-  CuratedSpot,
   CurrentConditions,
   DailyParams,
   DailySummary,
@@ -21,6 +20,7 @@ import type {
   HourlyParams,
   PlaceSearchParams,
   PlaceSearchResultDto,
+  SpotWithConditions,
   SurfForecastResponse,
 } from './types';
 
@@ -81,8 +81,15 @@ export const swellApi = {
     return data;
   },
 
-  getCuratedSpots: async (): Promise<CuratedSpot[]> => {
-    const { data } = await apiClient.get<CuratedSpot[]>(API_CONFIG.ENDPOINTS.PLACES_SPOTS);
-    return data;
+  getSpotConditions: async (): Promise<SpotWithConditions[]> => {
+    const { data } = await apiClient.get<SpotWithConditions[]>(
+      API_CONFIG.ENDPOINTS.PLACES_SPOT_CONDITIONS
+    );
+    return data.map((item) => ({
+      spot: item.spot,
+      conditions: item.conditions
+        ? normalizeCurrentConditions(item.conditions)
+        : null,
+    }));
   },
 };

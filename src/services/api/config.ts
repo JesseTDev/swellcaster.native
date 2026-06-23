@@ -53,7 +53,7 @@ export const API_CONFIG = {
     HOURLY: '/api/swell/hourly',
     DAILY: '/api/swell/daily',
     PLACES_SEARCH: '/api/places/search',
-    PLACES_SPOTS: '/api/places/spots',
+    PLACES_SPOT_CONDITIONS: '/api/places/spots/conditions',
   },
 } as const;
 

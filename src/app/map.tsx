@@ -25,7 +25,7 @@ import type { CoordinatesParams } from '@/services/api';
 import { useSelectedLocationStore } from '@/stores/selected-location-store';
 import { formatCoordinates } from '@/utils/coordinates';
 import { formatRatingLabel, RATING_COLORS, SURF_RATINGS } from '@/utils/forecast';
-import { formatSurfHeightRange } from '@/utils/surf-height';
+import { formatSurfHeightRangeFromConditions } from '@/utils/surf-height';
 import { formatWindSpeedKnots } from '@/utils/units';
 
 export default function MapScreen() {
@@ -123,12 +123,13 @@ export default function MapScreen() {
                 <ConditionBadge
                   swellHeightM={selectedConditions.swell.height}
                   swellPeriodS={selectedConditions.swell.period}
+                  rating={selectedConditions.rating}
                 />
               </View>
               <ThemedText style={styles.wave}>
-                {formatSurfHeightRange(
-                  selectedConditions.swell.height,
-                  selectedConditions.swell.period
+                {formatSurfHeightRangeFromConditions(
+                  selectedConditions.wave,
+                  selectedConditions.swell
                 )}{' '}
                 surf · {selectedConditions.swell.period.toFixed(0)} s swell ·{' '}
                 {formatWindSpeedKnots(selectedConditions.wind.speedKnots)} wind

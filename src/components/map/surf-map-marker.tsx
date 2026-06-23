@@ -5,7 +5,7 @@
 import { Pressable, StyleSheet, View } from "react-native";
 import { Marker } from "react-native-maps";
 
-import type { CuratedSpot } from "@/services/api";
+import type { CurrentConditions, CuratedSpot } from "@/services/api";
 import { getRatingColor, getSurfRating } from "@/utils/forecast";
 
 const DOT_SIZE = 10;
@@ -13,21 +13,21 @@ const TOUCH_SIZE = 40;
 
 interface SurfMapMarkerProps {
   spot: CuratedSpot;
-  swellHeightM?: number;
-  swellPeriodS?: number;
+  conditions?: CurrentConditions | null;
   isSelected?: boolean;
   onPress: () => void;
 }
 
 export function SurfMapMarker({
   spot,
-  swellHeightM,
-  swellPeriodS = 8,
+  conditions,
   isSelected = false,
   onPress,
 }: SurfMapMarkerProps) {
-  const rating =
-    swellHeightM != null ? getSurfRating(swellHeightM, swellPeriodS) : null;
+  const rating = conditions?.rating
+    ?? (conditions
+      ? getSurfRating(conditions.swell.height, conditions.swell.period)
+      : null);
   const color = rating ? getRatingColor(rating) : "#94A3B8";
 
   return (

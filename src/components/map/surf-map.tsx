@@ -8,8 +8,7 @@ import MapView, { Marker, PROVIDER_DEFAULT, Region } from "react-native-maps";
 
 import { MapSelectionPin } from "@/components/map/map-selection-pin";
 import { SurfMapMarker } from "@/components/map/surf-map-marker";
-import { useCuratedSpots } from "@/hooks/api/use-curated-spots";
-import { useSurfSpotConditions } from "@/hooks/use-surf-spot-conditions";
+import { useCuratedSpotConditions } from "@/hooks/use-curated-spot-conditions";
 import type { CoordinatesParams, CuratedSpot } from "@/services/api";
 
 const DEFAULT_REGION: Region = {
@@ -40,8 +39,7 @@ export function SurfMap({
   onSelectCoords,
 }: SurfMapProps) {
   const mapRef = useRef<MapView>(null);
-  const { data: curatedSpots = [] } = useCuratedSpots();
-  const spotConditions = useSurfSpotConditions(curatedSpots);
+  const { data: spotConditions = [] } = useCuratedSpotConditions();
   const [hasCenteredOnUser, setHasCenteredOnUser] = useState(false);
 
   useEffect(() => {
@@ -94,8 +92,7 @@ export function SurfMap({
           <SurfMapMarker
             key={spot.id}
             spot={spot}
-            swellHeightM={conditions?.swell?.height}
-            swellPeriodS={conditions?.swell?.period}
+            conditions={conditions}
             isSelected={
               selectedCoords != null &&
               isSameCoords(selectedCoords, { lat: spot.lat, lon: spot.lon })

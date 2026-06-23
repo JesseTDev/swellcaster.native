@@ -14,7 +14,7 @@ import { ForecastCard } from '@/components/ui/forecast-card';
 import { ForecastColors } from '@/constants/forecast-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import type { ForecastHour } from '@/services/api';
-import { estimateSurfHeightFt } from '@/utils/surf-height';
+import { estimateSurfHeightFtFromConditions } from '@/utils/surf-height';
 
 interface WaveHeightChartProps {
   data: ForecastHour[];
@@ -23,9 +23,7 @@ interface WaveHeightChartProps {
 
 function buildChartPoints(data: ForecastHour[]): ForecastLinePoint[] {
   return data.slice(0, 24).map((item, index) => {
-    const swellHeightM = item.swell?.height ?? 0;
-    const swellPeriodS = item.swell?.period ?? 8;
-    const ft = estimateSurfHeightFt(swellHeightM, swellPeriodS);
+    const ft = estimateSurfHeightFtFromConditions(item.wave, item.swell);
     const value = Number.isFinite(ft) ? Number(ft.toFixed(2)) : 0;
     const label =
       index % 4 === 0

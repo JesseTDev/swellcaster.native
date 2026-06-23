@@ -14,8 +14,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ForecastColors } from '@/constants/forecast-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import type { DailySummary } from '@/services/api';
-import { formatDirection, formatDirectionFull, getSurfRating } from '@/utils/forecast';
-import { formatSurfHeightRange } from '@/utils/surf-height';
+import { formatDirection, formatDirectionFull } from '@/utils/forecast';
+import { formatSurfHeightRangeFromConditions } from '@/utils/surf-height';
 import { formatWaveHeightValueFeet, formatWindSpeedKnots, WAVE_HEIGHT_UNIT } from '@/utils/units';
 
 interface DailyForecastCardProps {
@@ -60,11 +60,14 @@ export function DailyForecastCard({ data, isToday, testID }: DailyForecastCardPr
   const date = new Date(data.date);
   const dayName = isToday ? 'Today' : date.toLocaleDateString('en-AU', { weekday: 'short' });
   const dateLabel = date.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
-  const rating = getSurfRating(data.swell.maxHeight, data.swell.maxPeriod);
-  const surfRange = formatSurfHeightRange(data.swell.maxHeight, data.swell.maxPeriod);
+  const wind = data.wind;
+  const rating = data.rating;
+  const surfRange = formatSurfHeightRangeFromConditions(
+    { height: data.wave.maxHeight, period: data.wave.maxPeriod },
+    { height: data.swell.maxHeight, period: data.swell.maxPeriod }
+  );
   const swellPeriod = `${data.swell.maxPeriod.toFixed(0)} s`;
   const swellDirLabel = formatDirection(data.swell.dominantDirection);
-  const wind = data.wind;
 
   return (
     <ForecastCard

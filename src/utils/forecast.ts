@@ -1,5 +1,8 @@
+import type { SurfRating } from '@/services/api/types';
 import { estimateSurfHeightM } from '@/utils/surf-height';
 import { metersToFeet } from '@/utils/units';
+
+export type { SurfRating };
 
 export function formatDirection(degrees: number): string {
   const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
@@ -11,8 +14,6 @@ export function formatDirectionFull(degrees: number): string {
   return `${formatDirection(degrees)} ${Math.round(degrees)}°`;
 }
 
-export type SurfRating = 'bad' | 'good' | 'very good' | 'amazing';
-
 export const RATING_COLORS: Record<SurfRating, string> = {
   bad: '#EF4444',
   good: '#EAB308',
@@ -20,7 +21,7 @@ export const RATING_COLORS: Record<SurfRating, string> = {
   amazing: '#22C55E',
 };
 
-/** Rating from estimated breaking surf (ft), not raw offshore wave height. */
+/** Height-only rating for generic locations without break geometry. */
 export function getSurfRating(swellHeightM: number, swellPeriodS = 8): SurfRating {
   const ft = metersToFeet(estimateSurfHeightM(swellHeightM, swellPeriodS));
   if (ft < 1) return 'bad';

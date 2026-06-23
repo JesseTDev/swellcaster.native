@@ -37,7 +37,11 @@ export interface CurrentConditions {
   wind: WindData;
   waterTemperature: number;
   seaLevelHeightM?: number;
+  /** bad | good | very good | amazing — from API when coords match a curated spot */
+  rating?: SurfRating;
 }
+
+export type SurfRating = 'bad' | 'good' | 'very good' | 'amazing';
 
 export interface ForecastHour {
   timestamp: string;
@@ -71,6 +75,7 @@ export interface DailySummary {
   wave: DailyWaveSummary;
   swell: DailySwellSummary;
   wind?: DailyWindSummary;
+  rating?: SurfRating;
 }
 
 export interface SurfForecastResponse {
@@ -119,4 +124,13 @@ export interface CuratedSpot {
   lon: number;
   region?: string;
   aliases?: string[];
+  /** Compass bearing the break faces toward open ocean (degrees). */
+  shoreBearing?: number;
+  swellToleranceDeg?: number;
+  breakType?: 'beach' | 'point' | 'reef';
+}
+
+export interface SpotWithConditions {
+  spot: CuratedSpot;
+  conditions: CurrentConditions | null;
 }

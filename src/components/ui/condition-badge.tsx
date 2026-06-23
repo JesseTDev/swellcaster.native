@@ -5,12 +5,18 @@
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { formatRatingLabel, getRatingColor, getSurfRating, type SurfRating } from '@/utils/forecast';
+import {
+  formatRatingLabel,
+  getRatingColor,
+  getSurfRating,
+  type SurfRating,
+} from '@/utils/forecast';
 
 interface ConditionBadgeProps {
   swellHeightM: number;
   swellPeriodS?: number;
-  rating?: SurfRating;
+  /** Pre-computed rating from API (preferred for curated spots). */
+  rating?: SurfRating | null;
   compact?: boolean;
 }
 
@@ -20,7 +26,8 @@ export function ConditionBadge({
   rating,
   compact = false,
 }: ConditionBadgeProps) {
-  const resolved = rating ?? getSurfRating(swellHeightM, swellPeriodS);
+  const resolved =
+    rating ?? getSurfRating(swellHeightM, swellPeriodS);
   const color = getRatingColor(resolved);
 
   return (
