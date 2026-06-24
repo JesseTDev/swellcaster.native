@@ -2,7 +2,8 @@
  * SurfMapMarker — glowing rating dot; tap circle for spot data
  */
 
-import { Pressable, StyleSheet, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { Marker } from "react-native-maps";
 
 import type { CurrentConditions, CuratedSpot } from "@/services/api";
@@ -29,12 +30,20 @@ export function SurfMapMarker({
       ? getSurfRating(conditions.swell.height, conditions.swell.period)
       : null);
   const color = rating ? getRatingColor(rating) : "#94A3B8";
+  const [tracksViewChanges, setTracksViewChanges] = useState(Platform.OS === "ios");
+
+  useEffect(() => {
+    if (Platform.OS !== "ios") return;
+    setTracksViewChanges(true);
+    const timer = setTimeout(() => setTracksViewChanges(false), 800);
+    return () => clearTimeout(timer);
+  }, [color, isSelected]);
 
   return (
     <Marker
       coordinate={{ latitude: spot.lat, longitude: spot.lon }}
       anchor={{ x: 0.5, y: 0.5 }}
-      tracksViewChanges={false}
+      tracksViewChanges={tracksViewChanges}
       onPress={(event) => {
         event.stopPropagation?.();
         onPress();

@@ -63,17 +63,22 @@ class ApiClient {
 
         // Handle specific error cases
         if (error.response) {
-          // Server responded with error status
-          switch (error.response.status) {
-            case 401:
-              // Handle unauthorized - redirect to login, etc.
-              break;
-            case 404:
-              console.error('Resource not found');
-              break;
-            case 500:
-              console.error('Server error');
-              break;
+          const status = error.response.status;
+          const url = error.config?.url ?? '';
+          const isExpectedMissingVideo =
+            status === 404 && url.includes('/api/videos/at');
+
+          if (!isExpectedMissingVideo && __DEV__) {
+            switch (status) {
+              case 401:
+                break;
+              case 404:
+                console.error('Resource not found');
+                break;
+              case 500:
+                console.error('Server error');
+                break;
+            }
           }
         } else if (error.request) {
           // Request made but no response received

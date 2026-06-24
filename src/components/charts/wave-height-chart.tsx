@@ -74,7 +74,7 @@ export function WaveHeightChart({ data, testID }: WaveHeightChartProps) {
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 8,
+    marginVertical: 6,
   },
   footer: {
     marginTop: 4,

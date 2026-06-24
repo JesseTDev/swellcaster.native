@@ -8,8 +8,9 @@ import MapView, { Marker, PROVIDER_DEFAULT, Region } from "react-native-maps";
 
 import { MapSelectionPin } from "@/components/map/map-selection-pin";
 import { SurfMapMarker } from "@/components/map/surf-map-marker";
-import { useCuratedSpotConditions } from "@/hooks/use-curated-spot-conditions";
-import type { CoordinatesParams, CuratedSpot } from "@/services/api";
+import { VideoMapMarker } from "@/components/map/video-map-marker";
+import { useActiveConditionVideos } from '@/hooks/api/use-condition-videos';
+import type { CoordinatesParams, ConditionVideo, CuratedSpot, SpotWithConditions } from '@/services/api';
 
 const DEFAULT_REGION: Region = {
   latitude: -26.6556,
@@ -23,7 +24,11 @@ interface SurfMapProps {
   selectedCoords: CoordinatesParams | null;
   /** True when a labelled surf spot was tapped — hides the map pin */
   selectedIsSpot?: boolean;
+  /** True when a film icon was tapped */
+  selectedIsVideo?: boolean;
+  spotConditions: SpotWithConditions[];
   onSelectCoords: (coords: CoordinatesParams, label?: string) => void;
+  onSelectVideo: (video: ConditionVideo) => void;
 }
 
 function isSameCoords(a: CoordinatesParams, b: CoordinatesParams): boolean {
@@ -36,10 +41,13 @@ export function SurfMap({
   userCoords,
   selectedCoords,
   selectedIsSpot = false,
+  selectedIsVideo = false,
+  spotConditions,
   onSelectCoords,
+  onSelectVideo,
 }: SurfMapProps) {
   const mapRef = useRef<MapView>(null);
-  const { data: spotConditions = [] } = useCuratedSpotConditions();
+  const { data: activeVideos = [] } = useActiveConditionVideos();
   const [hasCenteredOnUser, setHasCenteredOnUser] = useState(false);
 
   useEffect(() => {
@@ -77,6 +85,19 @@ export function SurfMap({
     );
   };
 
+  const handleVideoPress = (video: ConditionVideo) => {
+    onSelectVideo(video);
+    mapRef.current?.animateToRegion(
+      {
+        latitude: video.lat,
+        longitude: video.lon,
+        latitudeDelta: 0.06,
+        longitudeDelta: 0.06,
+      },
+      400,
+    );
+  };
+
   return (
     <View style={styles.container}>
       <MapView
@@ -95,13 +116,36 @@ export function SurfMap({
             conditions={conditions}
             isSelected={
               selectedCoords != null &&
-              isSameCoords(selectedCoords, { lat: spot.lat, lon: spot.lon })
+              isSameCoords(selectedCoords, { lat: spot.lat, lon: spot.lon }) &&
+              !selectedIsVideo
             }
             onPress={() => handleMarkerPress(spot)}
           />
         ))}
 
-        {selectedCoords && !selectedIsSpot ? (
+        {activeVideos.map((video) => (
+          <Marker
+            key={video.id}
+            coordinate={{ latitude: video.lat, longitude: video.lon }}
+            anchor={{ x: 0.5, y: 0.5 }}
+            tracksViewChanges={false}
+            zIndex={10}
+            onPress={(e) => {
+              e.stopPropagation?.();
+              handleVideoPress(video);
+            }}
+          >
+            <VideoMapMarker
+              isSelected={
+                selectedIsVideo &&
+                selectedCoords != null &&
+                isSameCoords(selectedCoords, { lat: video.lat, lon: video.lon })
+              }
+            />
+          </Marker>
+        ))}
+
+        {selectedCoords && !selectedIsSpot && !selectedIsVideo ? (
           <Marker
             coordinate={{
               latitude: selectedCoords.lat,

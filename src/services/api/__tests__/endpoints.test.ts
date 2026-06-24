@@ -174,7 +174,9 @@ describe('Swell API Endpoints', () => {
 
       const result = await swellApi.getSpotConditions();
 
-      expect(mockedApiClient.get).toHaveBeenCalledWith('/api/places/spots/conditions');
+      expect(mockedApiClient.get).toHaveBeenCalledWith('/api/places/spots/conditions', {
+        timeout: 120000,
+      });
       expect(result[0].conditions?.rating).toBe('good');
     });
   });

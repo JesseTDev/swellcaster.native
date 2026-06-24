@@ -10,7 +10,7 @@ const API_PORT = 5213;
 // Metro port 8081 (already reachable) instead of direct access to :5213.
 config.server.enhanceMiddleware = (metroMiddleware) => {
   return (req, res, next) => {
-    if (!req.url?.startsWith('/api/')) {
+    if (!req.url?.startsWith('/api/') && !req.url?.startsWith('/uploads/')) {
       return metroMiddleware(req, res, next);
     }
 

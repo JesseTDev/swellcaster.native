@@ -14,12 +14,9 @@ export function QueryProvider({ children }: PropsWithChildren) {
           queries: {
             // Stale time: 5 minutes
             staleTime: 5 * 60 * 1000,
-            // Cache time: 10 minutes
-            gcTime: 10 * 60 * 1000,
-            // Retry failed requests
-            retry: 2,
-            // Refetch on window focus in development
-            refetchOnWindowFocus: __DEV__,
+            gcTime: 15 * 60 * 1000,
+            retry: 1,
+            refetchOnWindowFocus: false,
             // Don't refetch on mount if data is fresh
             refetchOnMount: false,
           },

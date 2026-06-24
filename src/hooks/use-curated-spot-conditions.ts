@@ -8,10 +8,17 @@ import { swellApi, type SpotWithConditions } from '@/services/api';
 
 export const SPOT_CONDITIONS_QUERY_KEY = 'spot-conditions';
 
+export const spotConditionsQueryOptions = {
+  queryKey: [SPOT_CONDITIONS_QUERY_KEY] as const,
+  queryFn: () => swellApi.getSpotConditions(),
+  staleTime: 15 * 60 * 1000,
+  gcTime: 30 * 60 * 1000,
+  refetchOnWindowFocus: false,
+  refetchOnMount: false,
+  refetchOnReconnect: false,
+  retry: 1,
+};
+
 export function useCuratedSpotConditions() {
-  return useQuery<SpotWithConditions[]>({
-    queryKey: [SPOT_CONDITIONS_QUERY_KEY],
-    queryFn: () => swellApi.getSpotConditions(),
-    staleTime: 5 * 60 * 1000,
-  });
+  return useQuery<SpotWithConditions[]>(spotConditionsQueryOptions);
 }

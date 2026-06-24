@@ -8,6 +8,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/themed-text';
+import { ForecastColors, ForecastRadii, ForecastTypography } from '@/constants/forecast-theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useTheme } from '@/hooks/use-theme';
 
 interface CollapsibleSectionProps {
@@ -15,6 +17,8 @@ interface CollapsibleSectionProps {
   subtitle?: string;
   action?: string;
   defaultExpanded?: boolean;
+  expanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
   children: ReactNode;
 }
 
@@ -22,21 +26,39 @@ export function CollapsibleSection({
   title,
   subtitle,
   action,
-  defaultExpanded = true,
+  defaultExpanded = false,
+  expanded: expandedProp,
+  onExpandedChange,
   children,
 }: CollapsibleSectionProps) {
-  const [expanded, setExpanded] = useState(defaultExpanded);
+  const [expandedInternal, setExpandedInternal] = useState(defaultExpanded);
+  const expanded = expandedProp ?? expandedInternal;
+  const scheme = useColorScheme();
+  const palette = ForecastColors[scheme];
   const theme = useTheme();
+
+  const toggleExpanded = () => {
+    const next = !expanded;
+    if (expandedProp == null) {
+      setExpandedInternal(next);
+    }
+    onExpandedChange?.(next);
+  };
 
   return (
     <View>
       <Pressable
         style={({ pressed }) => [
           styles.header,
+          {
+            backgroundColor: expanded ? palette.surface : 'transparent',
+            borderColor: palette.borderStrong,
+          },
+          expanded && styles.headerExpanded,
           !expanded && styles.headerCollapsed,
           pressed && styles.headerPressed,
         ]}
-        onPress={() => setExpanded((value) => !value)}
+        onPress={toggleExpanded}
         accessibilityRole="button"
         accessibilityState={{ expanded }}
         accessibilityLabel={`${title}, ${expanded ? 'collapse' : 'expand'}`}
@@ -69,7 +91,8 @@ export function CollapsibleSection({
 
       {expanded ? (
         <Animated.View entering={FadeIn.duration(180)} exiting={FadeOut.duration(120)}>
-          {children}
+          <View style={[styles.divider, { backgroundColor: palette.borderStrong }]} />
+          <View style={styles.body}>{children}</View>
         </Animated.View>
       ) : null}
     </View>
@@ -79,31 +102,45 @@ export function CollapsibleSection({
 const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     gap: 8,
-    marginBottom: 12,
+    marginHorizontal: -14,
+    marginTop: -14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderBottomWidth: 0,
   },
-  headerCollapsed: {
+  headerExpanded: {
+    borderBottomWidth: 0,
+    borderRadius: ForecastRadii.inner,
     marginBottom: 0,
   },
+  headerCollapsed: {
+    marginBottom: -14,
+  },
   headerPressed: {
-    opacity: 0.7,
+    opacity: 0.75,
   },
   textGroup: {
     flex: 1,
   },
   title: {
-    fontSize: 13,
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
+    ...ForecastTypography.sectionTitle,
   },
   subtitle: {
-    fontSize: 12,
+    ...ForecastTypography.caption,
     marginTop: 2,
   },
   action: {
-    fontSize: 12,
-    maxWidth: '35%',
+    ...ForecastTypography.caption,
+    maxWidth: '40%',
     textAlign: 'right',
+  },
+  divider: {
+    height: 1,
+    marginHorizontal: -14,
+  },
+  body: {
+    paddingTop: 12,
   },
 });

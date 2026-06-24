@@ -40,39 +40,31 @@ src/
 
 ## Getting Started
 
-### Prerequisites
+See **[QUICKSTART.md](./QUICKSTART.md)** for the full local dev guide (API + phone + troubleshooting).
 
-- Node.js 18+ and npm
-- Expo CLI: `npm install -g expo-cli`
-- iOS Simulator (Mac) or Android Studio
-- SwellCaster API running locally or deployed
+**Documentation:** [docs/](./docs/README.md) — detailed guides including [surf forecast videos](./docs/SURF_FORECAST_VIDEOS.md) (map recording, film icons, API flow).
 
-### Installation
+**Quick version — two terminals:**
 
-1. Install dependencies:
 ```bash
+# Terminal 1 — API (from ../SwellCaster.API)
+dotnet run --launch-profile http
+
+# Terminal 2 — app (from this folder)
 npm install
+npm run start:phone
 ```
 
-2. Configure API endpoint in `src/services/api/config.ts`:
-```typescript
-export const API_CONFIG = {
-  BASE_URL: 'http://localhost:5000', // Update with your API URL
-  // ...
-};
-```
+Scan the QR code with **Expo Go** on your phone (same Wi‑Fi as your Mac).
 
-3. Start the development server:
-```bash
-npm start
-```
+| Command | Use case |
+|---------|----------|
+| `npm run start:phone` | Physical device via Expo Go (recommended) |
+| `npm run ios` | iOS Simulator |
+| `npm run android` | Android emulator |
+| `npm start` | Expo menu — pick platform |
 
-4. Run on a platform:
-```bash
-npm run ios      # iOS Simulator
-npm run android  # Android Emulator
-npm run web      # Web browser
-```
+Dev API URL is chosen automatically in `src/services/api/config.ts` (Metro proxy on phone, `localhost:5213` on simulator).
 
 ## API Integration
 
@@ -202,10 +194,7 @@ const styles = StyleSheet.create({
 
 ### Query Settings
 
-- **Stale Time**: 5 minutes (data considered fresh)
-- **Cache Time**: 10 minutes (data kept in cache)
-- **Retry**: 2 attempts for failed queries
-- **Refetch on Focus**: Enabled in development only
+Defaults in `src/providers/query-provider.tsx`: 5 min stale time, no refetch on window focus. Per-hook overrides (e.g. spot conditions 15 min) live in `src/hooks/`.
 
 ### Custom Query Options
 
@@ -240,10 +229,11 @@ EXPO_PUBLIC_API_URL=https://api.example.com
 
 ## Scripts
 
-- `npm start` - Start Expo development server
-- `npm run ios` - Run on iOS simulator
-- `npm run android` - Run on Android emulator
-- `npm run web` - Run in web browser
+- `npm run start:phone` - Expo Go on a physical device (QR code)
+- `npm start` - Expo development server
+- `npm run ios` - iOS Simulator
+- `npm run android` - Android emulator
+- `npm run web` - Web browser
 - `npm test` - Run tests
 - `npm run lint` - Run linter
 

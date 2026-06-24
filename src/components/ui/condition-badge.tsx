@@ -49,13 +49,13 @@ const styles = StyleSheet.create({
   badge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 6,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 8,
+    borderWidth: 1,
   },
   badgeCompact: {
     paddingHorizontal: 7,
     paddingVertical: 3,
-    borderRadius: 5,
+    borderRadius: 6,
   },
   text: {
     fontSize: 12,

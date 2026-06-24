@@ -1,5 +1,5 @@
 /**
- * MetricCell — single forecast metric in a grid
+ * StatRow — single metric line (label + value + optional unit)
  */
 
 import { StyleSheet, View } from 'react-native';
@@ -7,20 +7,20 @@ import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ForecastTypography } from '@/constants/forecast-theme';
 
-interface MetricCellProps {
+interface StatRowProps {
   label: string;
   value: string;
   unit?: string;
   testID?: string;
 }
 
-export function MetricCell({ label, value, unit, testID }: MetricCellProps) {
+export function StatRow({ label, value, unit, testID }: StatRowProps) {
   return (
-    <View style={styles.cell} testID={testID}>
+    <View style={styles.row} testID={testID}>
       <ThemedText themeColor="textSecondary" style={styles.label}>
         {label}
       </ThemedText>
-      <View style={styles.valueRow}>
+      <View style={styles.valueGroup}>
         <ThemedText style={styles.value}>{value}</ThemedText>
         {unit ? (
           <ThemedText themeColor="textSecondary" style={styles.unit}>
@@ -33,23 +33,27 @@ export function MetricCell({ label, value, unit, testID }: MetricCellProps) {
 }
 
 const styles = StyleSheet.create({
-  cell: {
-    flex: 1,
-    minWidth: '45%',
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
     paddingVertical: 6,
   },
   label: {
     ...ForecastTypography.label,
-    marginBottom: 2,
+    flex: 1,
   },
-  valueRow: {
+  valueGroup: {
     flexDirection: 'row',
     alignItems: 'baseline',
     gap: 3,
+    flexShrink: 1,
   },
   value: {
-    ...ForecastTypography.metric,
+    ...ForecastTypography.bodyBold,
     fontVariant: ['tabular-nums'],
+    textAlign: 'right',
   },
   unit: {
     ...ForecastTypography.caption,

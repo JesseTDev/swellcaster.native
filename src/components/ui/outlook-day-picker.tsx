@@ -10,7 +10,12 @@ import {
   OUTLOOK_DAY_OPTIONS,
   type OutlookDays,
 } from '@/constants/outlook-days';
-import { ForecastColors } from '@/constants/forecast-theme';
+import {
+  ForecastColors,
+  ForecastRadii,
+  ForecastTypography,
+  getForecastInsetStyle,
+} from '@/constants/forecast-theme';
 import { Spacing } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -26,7 +31,7 @@ export function OutlookDayPicker({ value, onChange, testID }: OutlookDayPickerPr
 
   return (
     <View style={styles.container} testID={testID}>
-      <View style={[styles.segmented, { backgroundColor: palette.surface, borderColor: palette.border }]}>
+      <View style={[styles.segmented, getForecastInsetStyle(scheme)]}>
         {OUTLOOK_DAY_OPTIONS.map((days) => {
           const selected = value === days;
           return (
@@ -71,27 +76,24 @@ const styles = StyleSheet.create({
   },
   segmented: {
     flexDirection: 'row',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 10,
-    padding: 3,
+    padding: 4,
     gap: 4,
   },
   segment: {
     flex: 1,
     alignItems: 'center',
     paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: ForecastRadii.inner - 2,
+    borderWidth: 1,
     borderColor: 'transparent',
   },
   segmentLabel: {
-    fontSize: 13,
-    fontWeight: '600',
+    ...ForecastTypography.bodyBold,
   },
   pressed: {
     opacity: 0.7,
   },
   hint: {
-    fontSize: 11,
+    ...ForecastTypography.caption,
   },
 });

@@ -7,6 +7,10 @@ import { StyleSheet, View } from 'react-native';
 import type { SurfRating } from '@/services/api/types';
 import { ThemedText } from '@/components/themed-text';
 import { ConditionBadge } from '@/components/ui/condition-badge';
+import { PlatformSymbol } from '@/components/ui/platform-symbol';
+import { ForecastTypography } from '@/constants/forecast-theme';
+import { useTheme } from '@/hooks/use-theme';
+import { formatWaveHeightValueFeet, WAVE_HEIGHT_UNIT } from '@/utils/units';
 
 interface LocationHeaderProps {
   /** e.g. "Current location" or "Selected location" */
@@ -18,8 +22,32 @@ interface LocationHeaderProps {
   swellHeightM: number;
   swellPeriodS?: number;
   rating?: SurfRating | null;
+  waterTemperatureC?: number;
+  seaLevelHeightM?: number | null;
   lastUpdated?: Date;
   testID?: string;
+}
+
+function EnvStat({
+  icon,
+  value,
+  unit,
+}: {
+  icon: { ios: 'drop.fill' | 'water.waves'; android: 'water-drop' | 'waves'; web: 'water-drop' | 'waves' };
+  value: string;
+  unit: string;
+}) {
+  const theme = useTheme();
+
+  return (
+    <View style={styles.envStat}>
+      <PlatformSymbol name={icon} size={11} tintColor={theme.textSecondary} />
+      <ThemedText style={styles.envValue}>{value}</ThemedText>
+      <ThemedText themeColor="textSecondary" style={styles.envUnit}>
+        {unit}
+      </ThemedText>
+    </View>
+  );
 }
 
 export function LocationHeader({
@@ -29,6 +57,8 @@ export function LocationHeader({
   swellHeightM,
   swellPeriodS = 8,
   rating,
+  waterTemperatureC,
+  seaLevelHeightM,
   lastUpdated,
   testID,
 }: LocationHeaderProps) {
@@ -38,6 +68,8 @@ export function LocationHeader({
         minute: '2-digit',
       })
     : '';
+
+  const showEnvStats = waterTemperatureC != null || seaLevelHeightM != null;
 
   return (
     <View style={styles.container} testID={testID}>
@@ -53,11 +85,32 @@ export function LocationHeader({
             </ThemedText>
           ) : null}
         </View>
-        <ConditionBadge
-          swellHeightM={swellHeightM}
-          swellPeriodS={swellPeriodS}
-          rating={rating}
-        />
+
+        <View style={styles.badgeColumn}>
+          <ConditionBadge
+            swellHeightM={swellHeightM}
+            swellPeriodS={swellPeriodS}
+            rating={rating}
+          />
+          {showEnvStats ? (
+            <View style={styles.envStats}>
+              {waterTemperatureC != null ? (
+                <EnvStat
+                  icon={{ ios: 'drop.fill', android: 'water-drop', web: 'water-drop' }}
+                  value={waterTemperatureC.toFixed(1)}
+                  unit="°C"
+                />
+              ) : null}
+              {seaLevelHeightM != null ? (
+                <EnvStat
+                  icon={{ ios: 'water.waves', android: 'waves', web: 'waves' }}
+                  value={formatWaveHeightValueFeet(seaLevelHeightM)}
+                  unit={WAVE_HEIGHT_UNIT}
+                />
+              ) : null}
+            </View>
+          ) : null}
+        </View>
       </View>
       {lastUpdated ? (
         <ThemedText themeColor="textSecondary" style={styles.time}>
@@ -70,35 +123,51 @@ export function LocationHeader({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   topRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    gap: 12,
+    gap: 10,
   },
   locationBlock: {
     flex: 1,
   },
+  badgeColumn: {
+    alignItems: 'flex-end',
+    gap: 6,
+  },
+  envStats: {
+    alignItems: 'flex-end',
+    gap: 3,
+  },
+  envStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  envValue: {
+    ...ForecastTypography.caption,
+    fontWeight: '600',
+    fontVariant: ['tabular-nums'],
+  },
+  envUnit: {
+    ...ForecastTypography.caption,
+  },
   currentLabel: {
-    fontSize: 11,
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    marginBottom: 4,
+    ...ForecastTypography.label,
+    marginBottom: 2,
   },
   placeName: {
-    fontSize: 28,
-    fontWeight: '700',
-    letterSpacing: -0.5,
-    lineHeight: 34,
+    ...ForecastTypography.placeName,
   },
   region: {
-    fontSize: 14,
-    marginTop: 2,
+    ...ForecastTypography.body,
+    marginTop: 1,
   },
   time: {
-    fontSize: 12,
-    marginTop: 8,
+    ...ForecastTypography.caption,
+    marginTop: 6,
   },
 });

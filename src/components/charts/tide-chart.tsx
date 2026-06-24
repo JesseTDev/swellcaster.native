@@ -164,7 +164,7 @@ export function TideChart({ data, lat, lon, testID }: TideChartProps) {
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 8,
+    marginVertical: 6,
   },
   footer: {
     marginTop: 4,

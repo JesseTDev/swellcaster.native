@@ -47,14 +47,21 @@ function getDevBaseUrl(): string {
 export const API_CONFIG = {
   BASE_URL: __DEV__ ? getDevBaseUrl() : 'https://your-production-api.com',
   TIMEOUT: 10000,
+  /** Cold map load fetches ~28 spots sequentially; allow time for first warmup. */
+  SPOT_CONDITIONS_TIMEOUT: 120000,
   ENDPOINTS: {
     FORECAST: '/api/swell/forecast',
     CURRENT: '/api/swell/current',
     HOURLY: '/api/swell/hourly',
     DAILY: '/api/swell/daily',
     PLACES_SEARCH: '/api/places/search',
+    PLACES_SPOTS: '/api/places/spots',
     PLACES_SPOT_CONDITIONS: '/api/places/spots/conditions',
+    VIDEOS_ACTIVE: '/api/videos/active',
+    VIDEOS_AT: '/api/videos/at',
+    VIDEOS_UPLOAD: '/api/videos',
   },
+  UPLOAD_TIMEOUT: 120000,
 } as const;
 
 if (__DEV__) {

@@ -22,6 +22,8 @@ import type {
   PlaceSearchResultDto,
   SpotWithConditions,
   SurfForecastResponse,
+  ConditionVideo,
+  CuratedSpot,
 } from './types';
 
 export const swellApi = {
@@ -81,9 +83,15 @@ export const swellApi = {
     return data;
   },
 
+  getCuratedSpots: async (): Promise<CuratedSpot[]> => {
+    const { data } = await apiClient.get<CuratedSpot[]>(API_CONFIG.ENDPOINTS.PLACES_SPOTS);
+    return data;
+  },
+
   getSpotConditions: async (): Promise<SpotWithConditions[]> => {
     const { data } = await apiClient.get<SpotWithConditions[]>(
-      API_CONFIG.ENDPOINTS.PLACES_SPOT_CONDITIONS
+      API_CONFIG.ENDPOINTS.PLACES_SPOT_CONDITIONS,
+      { timeout: API_CONFIG.SPOT_CONDITIONS_TIMEOUT }
     );
     return data.map((item) => ({
       spot: item.spot,
@@ -91,5 +99,45 @@ export const swellApi = {
         ? normalizeCurrentConditions(item.conditions)
         : null,
     }));
+  },
+};
+
+export const videosApi = {
+  getActive: async (): Promise<ConditionVideo[]> => {
+    const { data } = await apiClient.get<ConditionVideo[]>(API_CONFIG.ENDPOINTS.VIDEOS_ACTIVE);
+    return data;
+  },
+
+  getAt: async (params: CoordinatesParams): Promise<ConditionVideo | null> => {
+    const { data, status } = await apiClient.get<ConditionVideo>(
+      API_CONFIG.ENDPOINTS.VIDEOS_AT,
+      {
+        params,
+        validateStatus: (code) => code === 200 || code === 404,
+      }
+    );
+    if (status === 404) return null;
+    return data;
+  },
+
+  upload: async (
+    coords: CoordinatesParams,
+    file: { uri: string; name: string; type: string }
+  ): Promise<ConditionVideo> => {
+    const form = new FormData();
+    form.append('lat', String(coords.lat));
+    form.append('lon', String(coords.lon));
+    form.append('file', file as unknown as Blob);
+
+    const { data } = await apiClient.post<ConditionVideo>(
+      API_CONFIG.ENDPOINTS.VIDEOS_UPLOAD,
+      form,
+      {
+        timeout: API_CONFIG.UPLOAD_TIMEOUT,
+        headers: { 'Content-Type': 'multipart/form-data' },
+        transformRequest: (data) => data,
+      }
+    );
+    return data;
   },
 };

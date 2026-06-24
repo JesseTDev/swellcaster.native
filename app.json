@@ -47,7 +47,15 @@
         {
           "locationWhenInUsePermission": "Swell Caster uses your location to load surf forecasts for where you are."
         }
-      ]
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Swell Caster uses your camera to record spot conditions for other surfers.",
+          "microphonePermission": "Swell Caster uses your microphone when recording spot conditions."
+        }
+      ],
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true,

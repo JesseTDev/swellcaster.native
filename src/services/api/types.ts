@@ -134,3 +134,17 @@ export interface SpotWithConditions {
   spot: CuratedSpot;
   conditions: CurrentConditions | null;
 }
+
+export interface ConditionVideo {
+  id: string;
+  spotId?: string | null;
+  spotName?: string;
+  lat: number;
+  lon: number;
+  provider: 'youtube' | 'local' | string;
+  providerVideoId: string;
+  embedUrl: string;
+  thumbnailUrl?: string;
+  createdAtUtc: string;
+  expiresAtUtc: string;
+}

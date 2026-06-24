@@ -5,7 +5,7 @@
 import { PlatformSymbol, type PlatformSymbolName } from '@/components/ui/platform-symbol';
 import { Pressable, StyleSheet } from 'react-native';
 
-import { ForecastColors } from '@/constants/forecast-theme';
+import { ForecastColors, getForecastCardStyle } from '@/constants/forecast-theme';
 import { useColorScheme, useThemePreference } from '@/hooks/use-color-scheme';
 import { useThemeStore, themePreferenceLabel, type ThemePreference } from '@/stores/theme-store';
 
@@ -42,10 +42,7 @@ export function ThemeToggleButton() {
     <Pressable
       style={({ pressed }) => [
         styles.button,
-        {
-          backgroundColor: palette.surface,
-          borderColor: palette.border,
-        },
+        getForecastCardStyle(scheme),
         pressed && styles.pressed,
       ]}
       onPress={cyclePreference}
@@ -65,10 +62,9 @@ export function ThemeToggleButton() {
 
 const styles = StyleSheet.create({
   button: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: StyleSheet.hairlineWidth,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
   },

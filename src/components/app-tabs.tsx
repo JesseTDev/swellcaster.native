@@ -10,7 +10,11 @@ export default function AppTabs() {
   const colors = Colors[scheme];
 
   return (
-    <NativeTabs tintColor={palette.accent} labelStyle={{ color: colors.textSecondary }}>
+    <NativeTabs
+      tintColor={palette.accent}
+      minimizeBehavior="onScrollDown"
+      labelStyle={{ color: colors.textSecondary, fontSize: 11 }}
+    >
       <NativeTabs.Trigger name="index">
         <Label>Home</Label>
         <Icon sf={{ default: 'house', selected: 'house.fill' }} />

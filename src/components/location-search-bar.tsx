@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { ForecastColors } from '@/constants/forecast-theme';
+import { ForecastColors, ForecastRadii, getForecastCardStyle, getForecastInsetStyle } from '@/constants/forecast-theme';
 import { Colors, Spacing } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
@@ -174,10 +174,7 @@ export function LocationSearchBar({
         <Pressable
           style={({ pressed }) => [
             styles.iconButton,
-            {
-              backgroundColor: palette.surface,
-              borderColor: palette.border,
-            },
+            getForecastCardStyle(scheme),
             pressed && styles.pressed,
           ]}
           onPress={openSearch}
@@ -201,6 +198,7 @@ export function LocationSearchBar({
       <View
         style={[
           styles.inputWrap,
+          getForecastInsetStyle(scheme),
           {
             backgroundColor: palette.surfaceElevated,
             borderColor: palette.accent,
@@ -247,15 +245,7 @@ export function LocationSearchBar({
       </View>
 
       {showSuggestions ? (
-        <View
-          style={[
-            styles.results,
-            {
-              backgroundColor: palette.surfaceElevated,
-              borderColor: palette.border,
-            },
-          ]}
-        >
+        <View style={[styles.results, getForecastCardStyle(scheme)]}>
           {recentSearches.length > 0 ? (
             <View style={styles.section}>
               <ThemedText themeColor="textSecondary" style={styles.sectionLabel}>
@@ -286,10 +276,7 @@ export function LocationSearchBar({
                   key={example}
                   style={({ pressed }) => [
                     styles.exampleChip,
-                    {
-                      backgroundColor: palette.surface,
-                      borderColor: palette.border,
-                    },
+                    getForecastInsetStyle(scheme),
                     pressed && styles.pressed,
                   ]}
                   onPress={() => setQuery(example)}
@@ -307,15 +294,7 @@ export function LocationSearchBar({
       ) : null}
 
       {showTypedResults ? (
-        <View
-          style={[
-            styles.results,
-            {
-              backgroundColor: palette.surfaceElevated,
-              borderColor: palette.border,
-            },
-          ]}
-        >
+        <View style={[styles.results, getForecastCardStyle(scheme)]}>
           {results.length > 0 ? (
             <ScrollView
               keyboardShouldPersistTaps="always"
@@ -363,10 +342,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: StyleSheet.hairlineWidth,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -377,8 +355,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
@@ -395,8 +371,6 @@ const styles = StyleSheet.create({
   },
   results: {
     marginTop: 8,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 12,
     overflow: 'hidden',
   },
   resultsScroll: {
@@ -420,8 +394,7 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   exampleChip: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 999,
+    borderRadius: ForecastRadii.chip,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
