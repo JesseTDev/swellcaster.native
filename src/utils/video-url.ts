@@ -8,7 +8,3 @@ export function resolveVideoEmbedUrl(video: ConditionVideo): string {
   }
   return `${API_CONFIG.BASE_URL}${video.embedUrl.startsWith('/') ? '' : '/'}${video.embedUrl}`;
 }
-
-export function isYouTubeVideo(video: ConditionVideo): boolean {
-  return video.provider === 'youtube';
-}

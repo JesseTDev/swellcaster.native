@@ -10,7 +10,6 @@ import { ConditionBadge } from '@/components/ui/condition-badge';
 import { PlatformSymbol } from '@/components/ui/platform-symbol';
 import { ForecastTypography } from '@/constants/forecast-theme';
 import { useTheme } from '@/hooks/use-theme';
-import { formatWaveHeightValueFeet, WAVE_HEIGHT_UNIT } from '@/utils/units';
 
 interface LocationHeaderProps {
   /** e.g. "Current location" or "Selected location" */
@@ -21,6 +20,11 @@ interface LocationHeaderProps {
   placeRegion?: string | null;
   swellHeightM: number;
   swellPeriodS?: number;
+  swellDirection?: number;
+  waveHeightM?: number;
+  wavePeriodS?: number | null;
+  windDirection?: number;
+  windSpeedKnots?: number;
   rating?: SurfRating | null;
   waterTemperatureC?: number;
   seaLevelHeightM?: number | null;
@@ -30,10 +34,12 @@ interface LocationHeaderProps {
 
 function EnvStat({
   icon,
+  label,
   value,
   unit,
 }: {
   icon: { ios: 'drop.fill' | 'water.waves'; android: 'water-drop' | 'waves'; web: 'water-drop' | 'waves' };
+  label?: string;
   value: string;
   unit: string;
 }) {
@@ -42,6 +48,11 @@ function EnvStat({
   return (
     <View style={styles.envStat}>
       <PlatformSymbol name={icon} size={11} tintColor={theme.textSecondary} />
+      {label ? (
+        <ThemedText themeColor="textSecondary" style={styles.envLabel}>
+          {label}
+        </ThemedText>
+      ) : null}
       <ThemedText style={styles.envValue}>{value}</ThemedText>
       <ThemedText themeColor="textSecondary" style={styles.envUnit}>
         {unit}
@@ -56,6 +67,11 @@ export function LocationHeader({
   placeRegion,
   swellHeightM,
   swellPeriodS = 8,
+  swellDirection,
+  waveHeightM,
+  wavePeriodS,
+  windDirection,
+  windSpeedKnots,
   rating,
   waterTemperatureC,
   seaLevelHeightM,
@@ -90,6 +106,14 @@ export function LocationHeader({
           <ConditionBadge
             swellHeightM={swellHeightM}
             swellPeriodS={swellPeriodS}
+            swellDirection={swellDirection}
+            wave={
+              waveHeightM != null
+                ? { height: waveHeightM, period: wavePeriodS ?? swellPeriodS }
+                : undefined
+            }
+            windDirection={windDirection}
+            windSpeedKnots={windSpeedKnots}
             rating={rating}
           />
           {showEnvStats ? (
@@ -97,6 +121,7 @@ export function LocationHeader({
               {waterTemperatureC != null ? (
                 <EnvStat
                   icon={{ ios: 'drop.fill', android: 'water-drop', web: 'water-drop' }}
+                  label="Water temp"
                   value={waterTemperatureC.toFixed(1)}
                   unit="°C"
                 />
@@ -104,8 +129,9 @@ export function LocationHeader({
               {seaLevelHeightM != null ? (
                 <EnvStat
                   icon={{ ios: 'water.waves', android: 'waves', web: 'waves' }}
-                  value={formatWaveHeightValueFeet(seaLevelHeightM)}
-                  unit={WAVE_HEIGHT_UNIT}
+                  label="Tide"
+                  value={seaLevelHeightM.toFixed(2)}
+                  unit="m"
                 />
               ) : null}
             </View>
@@ -114,7 +140,7 @@ export function LocationHeader({
       </View>
       {lastUpdated ? (
         <ThemedText themeColor="textSecondary" style={styles.time}>
-          Observed {formattedTime} local
+          Now · {formattedTime} local
         </ThemedText>
       ) : null}
     </View>
@@ -146,6 +172,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
+  },
+  envLabel: {
+    ...ForecastTypography.caption,
+    fontWeight: '500',
   },
   envValue: {
     ...ForecastTypography.caption,

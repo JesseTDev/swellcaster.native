@@ -16,6 +16,7 @@ function normalizeWind(
   return {
     speedKnots: wind?.speedKnots ?? 0,
     direction: wind?.direction ?? windWaveDirection ?? 0,
+    gustKnots: wind?.gustKnots ?? null,
   };
 }
 

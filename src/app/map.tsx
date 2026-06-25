@@ -19,16 +19,16 @@ import {
   ConditionVideoPlayer,
   RecordConditionVideoButton,
 } from '@/components/condition-video';
+import { LocationForecastSections } from '@/components/forecast';
 import { SurfMap } from '@/components/map/surf-map';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { ConditionBadge } from '@/components/ui/condition-badge';
-import { DirectionCard } from '@/components/ui/direction-card';
 import { ForecastCard } from '@/components/ui/forecast-card';
 import { ThemeToggleButton } from '@/components/ui/theme-toggle-button';
-import { ForecastColors, ForecastTypography } from '@/constants/forecast-theme';
+import { ForecastColors, ForecastRadii, ForecastTypography } from '@/constants/forecast-theme';
+import { type OutlookDays } from '@/constants/outlook-days';
 import { BottomTabInset, Spacing } from '@/constants/theme';
-import { useCurrent } from '@/hooks/api';
+import { useForecast } from '@/hooks/api';
 import { useConditionVideoAt } from '@/hooks/api/use-condition-videos';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useDeviceLocation } from '@/hooks/use-device-location';
@@ -37,13 +37,8 @@ import type { CoordinatesParams, ConditionVideo } from '@/services/api';
 import { useSelectedLocationStore } from '@/stores/selected-location-store';
 import { findCuratedSpotAtCoords, formatCoordinates } from '@/utils/coordinates';
 import { formatRatingLabel, RATING_COLORS, SURF_RATINGS } from '@/utils/forecast';
-import { formatSurfHeightRangeFromConditions } from '@/utils/surf-height';
 
-const PANEL_MAX_HEIGHT = Math.min(Dimensions.get('window').height * 0.38, 320);
-
-function isSameCoords(a: CoordinatesParams, b: CoordinatesParams): boolean {
-  return Math.abs(a.lat - b.lat) < 0.0001 && Math.abs(a.lon - b.lon) < 0.0001;
-}
+const PANEL_MAX_HEIGHT = Math.min(Dimensions.get('window').height * 0.55, 480);
 
 export default function MapScreen() {
   const insets = useSafeAreaInsets();
@@ -62,11 +57,9 @@ export default function MapScreen() {
   const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
   const [selectedIsSpot, setSelectedIsSpot] = useState(false);
   const [selectedIsVideo, setSelectedIsVideo] = useState(false);
+  const [outlookDays, setOutlookDays] = useState<OutlookDays>(7);
 
-  const {
-    markers: spotMarkers,
-    isConditionsLoading: isSpotConditionsLoading,
-  } = useMapSpotMarkers();
+  const { markers: spotMarkers } = useMapSpotMarkers();
 
   const curatedSpots = useMemo(
     () => spotMarkers.map(({ spot }) => spot),
@@ -78,32 +71,26 @@ export default function MapScreen() {
     [userCoords, curatedSpots]
   );
 
-  const selectedSpotConditions = useMemo(() => {
-    if (!selectedCoords || !selectedIsSpot) return null;
-    return (
-      spotMarkers.find(({ spot }) =>
-        isSameCoords(selectedCoords, { lat: spot.lat, lon: spot.lon })
-      )?.conditions ?? null
-    );
-  }, [selectedCoords, selectedIsSpot, spotMarkers]);
-
-  const needsCurrentFetch =
-    selectedCoords != null &&
-    (!selectedIsSpot ||
-      (selectedSpotConditions == null && !isSpotConditionsLoading));
-
-  const { data: fetchedConditions, isLoading: isFetchingCurrent } = useCurrent(
-    selectedCoords ?? { lat: 0, lon: 0 },
-    { enabled: needsCurrentFetch }
+  const selectedCuratedSpot = useMemo(
+    () => (selectedCoords ? findCuratedSpotAtCoords(selectedCoords, curatedSpots) : null),
+    [selectedCoords, curatedSpots]
   );
 
-  const selectedConditions = selectedSpotConditions ?? fetchedConditions;
-  const isLoading =
-    selectedCoords == null
-      ? false
-      : selectedIsSpot
-        ? isSpotConditionsLoading && selectedSpotConditions == null
-        : isFetchingCurrent;
+  const {
+    data: forecastData,
+    isLoading: isForecastLoading,
+    isFetching: isForecastFetching,
+    error: forecastError,
+  } = useForecast(
+    {
+      lat: selectedCoords?.lat ?? 0,
+      lon: selectedCoords?.lon ?? 0,
+      days: outlookDays,
+    },
+    { enabled: selectedCoords != null }
+  );
+
+  const isOutlookRefreshing = isForecastFetching && forecastData != null;
 
   const { data: locationVideo, refetch: refetchLocationVideo } = useConditionVideoAt(
     selectedCoords
@@ -137,7 +124,6 @@ export default function MapScreen() {
     router.push('/');
   };
 
-  /** Record from GPS — any location, not just curated spots in our database */
   const canRecord = userCoords != null;
 
   const recordDisabledHint = (() => {
@@ -152,14 +138,31 @@ export default function MapScreen() {
     refetchLocationVideo();
   };
 
+  const forecastPlaceName =
+    selectedLabel ??
+    selectedCuratedSpot?.name ??
+    (selectedCoords ? formatCoordinates(selectedCoords.lat, selectedCoords.lon) : '');
+
+  const forecastPlaceRegion =
+    selectedCuratedSpot?.region ??
+    (selectedIsSpot ? null : selectedCoords ? formatCoordinates(selectedCoords.lat, selectedCoords.lon) : null);
+
+  const forecastLocationLabel = selectedIsVideo
+    ? 'Live video'
+    : selectedIsSpot
+      ? 'Surf spot'
+      : 'Selected location';
+
   const renderRecordSection = () => (
-    <RecordConditionVideoButton
-      coords={userCoords ?? { lat: 0, lon: 0 }}
-      disabled={!canRecord || isUserLocationLoading}
-      disabledHint={recordDisabledHint}
-      locationLabel={recordLocationLabel}
-      onUploaded={handleVideoUploaded}
-    />
+    <ForecastCard style={styles.recordCard}>
+      <RecordConditionVideoButton
+        coords={userCoords ?? { lat: 0, lon: 0 }}
+        disabled={!canRecord || isUserLocationLoading}
+        disabledHint={recordDisabledHint}
+        locationLabel={recordLocationLabel}
+        onUploaded={handleVideoUploaded}
+      />
+    </ForecastCard>
   );
 
   return (
@@ -217,76 +220,66 @@ export default function MapScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <ForecastCard style={styles.panel}>
           {!selectedCoords ? (
-            <ThemedText themeColor="textSecondary" style={styles.hint}>
-              Tap a film icon on the map to watch live surf video and see conditions at that
-              spot. Coloured dots show forecast ratings at known breaks.
-            </ThemedText>
+            <ForecastCard style={styles.panelHint}>
+              <ThemedText themeColor="textSecondary" style={styles.hint}>
+                Tap a coloured dot or film icon on the map to see the full forecast for that
+                spot — same details as the home screen.
+              </ThemedText>
+            </ForecastCard>
           ) : (
-            <>
+            <View style={styles.forecastPanel}>
               {selectedIsVideo && locationVideo ? (
-                <View style={styles.videoBlock}>
+                <ForecastCard style={styles.videoCard}>
                   <ConditionVideoPlayer video={locationVideo} height={160} />
-                </View>
+                </ForecastCard>
               ) : null}
 
-              {isLoading ? (
-                <View style={styles.loadingWrap}>
-                  <ActivityIndicator color={palette.accent} />
-                </View>
-              ) : selectedConditions ? (
-                <>
-                  <View style={styles.panelHeader}>
-                    <View style={styles.panelTitle}>
-                      <ThemedText style={styles.spotName}>
-                        {selectedLabel ?? 'Selected point'}
-                      </ThemedText>
-                      <ThemedText themeColor="textSecondary" style={styles.coords}>
-                        {formatCoordinates(selectedCoords.lat, selectedCoords.lon)}
-                      </ThemedText>
-                    </View>
-                    <ConditionBadge
-                      swellHeightM={selectedConditions.swell.height}
-                      swellPeriodS={selectedConditions.swell.period}
-                      rating={selectedConditions.rating}
-                    />
+              {isForecastLoading && !forecastData ? (
+                <ForecastCard style={styles.loadingCard}>
+                  <View style={styles.loadingWrap}>
+                    <ActivityIndicator color={palette.accent} />
+                    <ThemedText themeColor="textSecondary" style={styles.loadingText}>
+                      Loading forecast
+                    </ThemedText>
                   </View>
-
-                  <ThemedText style={styles.surfHero}>
-                    {formatSurfHeightRangeFromConditions(
-                      selectedConditions.wave,
-                      selectedConditions.swell
-                    )}
-                  </ThemedText>
-
-                  <DirectionCard
-                    embedded
-                    swellDirection={selectedConditions.swell.direction}
-                    swellHeightM={selectedConditions.swell.height}
-                    swellPeriodS={selectedConditions.swell.period}
-                    windDirection={selectedConditions.wind.direction}
-                    windSpeedKnots={selectedConditions.wind.speedKnots}
-                    windSeaHeightM={selectedConditions.windWave.height}
+                </ForecastCard>
+              ) : forecastError ? (
+                <ForecastCard style={styles.loadingCard}>
+                  <ThemedText themeColor="textSecondary">{forecastError.message}</ThemedText>
+                </ForecastCard>
+              ) : forecastData && selectedCoords ? (
+                <>
+                  <LocationForecastSections
+                    data={forecastData}
+                    coords={selectedCoords}
+                    placeName={forecastPlaceName}
+                    placeRegion={forecastPlaceRegion}
+                    locationLabel={forecastLocationLabel}
+                    spot={selectedCuratedSpot}
+                    outlookDays={outlookDays}
+                    onOutlookDaysChange={setOutlookDays}
+                    defaultOutlookExpanded={false}
+                    isOutlookRefreshing={isOutlookRefreshing}
+                    testIDPrefix="map"
                   />
+
+                  <Pressable
+                    style={[styles.button, { backgroundColor: palette.accent }]}
+                    onPress={handleUseLocation}
+                  >
+                    <ThemedText style={styles.buttonText}>Use for home forecast</ThemedText>
+                  </Pressable>
                 </>
               ) : (
-                <ThemedText themeColor="textSecondary">Could not load conditions.</ThemedText>
+                <ForecastCard>
+                  <ThemedText themeColor="textSecondary">Could not load forecast.</ThemedText>
+                </ForecastCard>
               )}
-
-              {selectedConditions ? (
-                <Pressable
-                  style={[styles.button, { backgroundColor: palette.accent }]}
-                  onPress={handleUseLocation}
-                >
-                  <ThemedText style={styles.buttonText}>Use for home forecast</ThemedText>
-                </Pressable>
-              ) : null}
-            </>
+            </View>
           )}
 
           {renderRecordSection()}
-        </ForecastCard>
         </ScrollView>
       </View>
     </ThemedView>
@@ -372,7 +365,7 @@ const styles = StyleSheet.create({
   },
   mapWrap: {
     flex: 1,
-    minHeight: 160,
+    minHeight: 140,
   },
   panelWrap: {
     flexShrink: 0,
@@ -380,51 +373,43 @@ const styles = StyleSheet.create({
   },
   panelScroll: {
     flexGrow: 0,
+    gap: 8,
+    paddingBottom: 4,
   },
-  panel: {
+  panelHint: {
     marginBottom: 0,
-    overflow: 'visible',
+  },
+  forecastPanel: {
+    gap: 0,
+  },
+  videoCard: {
+    marginBottom: 6,
+  },
+  loadingCard: {
+    marginBottom: 6,
   },
   loadingWrap: {
     paddingVertical: Spacing.three,
     alignItems: 'center',
+    gap: 8,
   },
-  videoBlock: {
-    marginBottom: 10,
+  loadingText: {
+    ...ForecastTypography.caption,
+  },
+  recordCard: {
+    marginTop: 4,
+    marginBottom: 0,
   },
   hint: {
     ...ForecastTypography.body,
     lineHeight: 18,
   },
-  panelHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-  },
-  panelTitle: {
-    flex: 1,
-    marginRight: 8,
-  },
-  spotName: {
-    ...ForecastTypography.bodyBold,
-    fontSize: 14,
-  },
-  coords: {
-    ...ForecastTypography.caption,
-    marginTop: 1,
-    fontVariant: ['tabular-nums'],
-  },
-  surfHero: {
-    ...ForecastTypography.metricLg,
-    fontVariant: ['tabular-nums'],
-    marginBottom: 6,
-  },
   button: {
-    paddingVertical: 10,
-    borderRadius: 8,
+    paddingVertical: 11,
+    borderRadius: ForecastRadii.inner,
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 10,
+    marginBottom: 4,
   },
   buttonText: {
     color: '#FFFFFF',

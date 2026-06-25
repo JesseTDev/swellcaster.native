@@ -2,7 +2,7 @@
  * Landing Page — surf forecast for your GPS location
  */
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Linking,
@@ -14,28 +14,21 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { TideChart } from '@/components/charts/tide-chart';
-import { WaveHeightChart } from '@/components/charts/wave-height-chart';
-import { DailyForecastCard } from '@/components/daily-forecast-card';
-import { LocationHeader } from '@/components/location-header';
+import { LocationForecastSections } from '@/components/forecast';
 import { LocationSearchBar } from '@/components/location-search-bar';
 import { Logo } from '@/components/logo';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { CollapsibleForecastCard } from '@/components/ui/collapsible-forecast-card';
-import { DirectionCard } from '@/components/ui/direction-card';
-import { PrimaryConditionsCard } from '@/components/ui/primary-conditions-card';
-import { OutlookDayPicker } from '@/components/ui/outlook-day-picker';
 import { ThemeToggleButton } from '@/components/ui/theme-toggle-button';
 import { ForecastColors, ForecastRadii, ForecastTypography } from '@/constants/forecast-theme';
 import { type OutlookDays } from '@/constants/outlook-days';
 import { Spacing } from '@/constants/theme';
 import { useForecast } from '@/hooks/api';
+import { useCuratedSpots } from '@/hooks/use-curated-spots';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useDeviceLocation } from '@/hooks/use-device-location';
 import { useSelectedLocationStore } from '@/stores/selected-location-store';
-import { formatCoordinates } from '@/utils/coordinates';
-import { formatSurfHeightRangeFromConditions } from '@/utils/surf-height';
+import { findCuratedSpotAtCoords, formatCoordinates } from '@/utils/coordinates';
 
 export default function LandingPage() {
   const insets = useSafeAreaInsets();
@@ -58,9 +51,14 @@ export default function LandingPage() {
 
   const activeCoords = manualCoords ?? gpsCoords;
 
+  const { data: curatedSpots = [] } = useCuratedSpots();
+  const activeSpot = useMemo(
+    () => (activeCoords ? findCuratedSpotAtCoords(activeCoords, curatedSpots) : null),
+    [activeCoords, curatedSpots]
+  );
+
   const [refreshing, setRefreshing] = useState(false);
   const [outlookDays, setOutlookDays] = useState<OutlookDays>(7);
-  const [outlookExpanded, setOutlookExpanded] = useState(false);
 
   const {
     data,
@@ -73,8 +71,7 @@ export default function LandingPage() {
     { enabled: activeCoords != null }
   );
 
-  const dailySummary = data?.dailySummary ?? [];
-  const visibleDaily = dailySummary.slice(0, outlookDays);
+
   const isInitialForecastLoad = isForecastLoading && !data;
   const isOutlookRefreshing = isForecastFetching && data != null;
 
@@ -180,11 +177,6 @@ export default function LandingPage() {
     ? formatCoordinates(activeCoords.lat, activeCoords.lon)
     : place?.region;
 
-  const { current, hourlyForecast } = data;
-  const lastUpdated = new Date(current.timestamp);
-  const { swell } = current;
-  const surfHeight = formatSurfHeightRangeFromConditions(current.wave, swell).replace(' ft', '');
-
   return (
     <ThemedView style={styles.screen}>
       <ScrollView
@@ -204,26 +196,13 @@ export default function LandingPage() {
           <View style={styles.brand}>
             <ThemedText style={styles.brandName}>Swell Caster</ThemedText>
             <ThemedText themeColor="textSecondary" style={styles.brandTag}>
-              Marine forecast
+             Surf forecast
             </ThemedText>
           </View>
           <ThemeToggleButton />
         </View>
 
         <LocationSearchBar testID="home-location-search" />
-
-        <LocationHeader
-          locationLabel={isManualLocation ? 'Selected location' : 'Current location'}
-          placeName={placeName}
-          placeRegion={placeRegion}
-          swellHeightM={swell.height}
-          swellPeriodS={swell.period}
-          rating={current.rating}
-          waterTemperatureC={current.waterTemperature}
-          seaLevelHeightM={current.seaLevelHeightM}
-          lastUpdated={lastUpdated}
-          testID="location-header"
-        />
 
         {isManualLocation ? (
           <Pressable
@@ -234,71 +213,18 @@ export default function LandingPage() {
           </Pressable>
         ) : null}
 
-        <PrimaryConditionsCard
-          surfHeightFt={surfHeight}
-          windDirection={current.wind.direction}
-          windSpeedKnots={current.wind.speedKnots}
-          testID="primary-conditions"
+        <LocationForecastSections
+          data={data}
+          coords={activeCoords}
+          placeName={placeName}
+          placeRegion={placeRegion}
+          locationLabel={isManualLocation ? 'Selected location' : 'Current location'}
+          spot={activeSpot}
+          outlookDays={outlookDays}
+          onOutlookDaysChange={setOutlookDays}
+          isOutlookRefreshing={isOutlookRefreshing}
+          testIDPrefix="home"
         />
-
-        <DirectionCard
-          swellDirection={current.swell.direction}
-          swellHeightM={current.swell.height}
-          swellPeriodS={current.swell.period}
-          windDirection={current.wind.direction}
-          windSpeedKnots={current.wind.speedKnots}
-          windSeaHeightM={current.windWave.height}
-          testID="directions-card"
-        />
-
-        {hourlyForecast.length > 0 ? (
-          <WaveHeightChart data={hourlyForecast} testID="wave-chart" />
-        ) : null}
-
-        {hourlyForecast.length > 0 ? (
-          <TideChart
-            data={hourlyForecast}
-            lat={activeCoords.lat}
-            lon={activeCoords.lon}
-            testID="tide-chart"
-          />
-        ) : null}
-
-        {visibleDaily.length > 0 || isOutlookRefreshing ? (
-          <CollapsibleForecastCard
-            title="Extended outlook"
-            action={`${visibleDaily.length} days`}
-            style={styles.outlookCard}
-            expanded={outlookExpanded}
-            onExpandedChange={setOutlookExpanded}
-            testID="extended-outlook"
-          >
-            <OutlookDayPicker
-              value={outlookDays}
-              onChange={setOutlookDays}
-              testID="outlook-day-picker"
-            />
-            {visibleDaily.length > 0 && visibleDaily.length < outlookDays ? (
-              <ThemedText themeColor="textSecondary" style={styles.dailyHint}>
-                Showing {visibleDaily.length} of {outlookDays} days from forecast.
-              </ThemedText>
-            ) : null}
-            {isOutlookRefreshing ? (
-              <ActivityIndicator size="small" color={palette.accent} style={styles.dailyLoader} />
-            ) : (
-              <View style={styles.dailyList}>
-                {visibleDaily.map((day, index) => (
-                  <DailyForecastCard
-                    key={day.date}
-                    data={day}
-                    isToday={index === 0}
-                    testID={`daily-card-${index}`}
-                  />
-                ))}
-              </View>
-            )}
-          </CollapsibleForecastCard>
-        ) : null}
 
         <ThemedText themeColor="textSecondary" style={styles.footer}>
           Pull to refresh · {data.timezone}
@@ -337,21 +263,6 @@ const styles = StyleSheet.create({
   brandTag: {
     ...ForecastTypography.label,
     marginTop: 1,
-  },
-  outlookCard: {
-    marginTop: 4,
-  },
-  dailyList: {
-    marginTop: 8,
-    gap: 0,
-  },
-  dailyHint: {
-    ...ForecastTypography.caption,
-    marginTop: 6,
-    marginBottom: 4,
-  },
-  dailyLoader: {
-    paddingVertical: Spacing.two,
   },
   loader: {
     marginTop: Spacing.two,

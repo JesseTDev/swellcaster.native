@@ -1,16 +1,16 @@
 /**
- * PrimaryConditionsCard — hero surf + wind with refined gradient surface
+ * PrimaryConditionsCard — hero surf height + wind snapshot
  */
 
-import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { DirectionArrow } from '@/components/ui/direction-arrow';
+import { ForecastCard } from '@/components/ui/forecast-card';
 import {
   ForecastColors,
-  ForecastRadii,
   ForecastTypography,
+  getForecastInsetStyle,
 } from '@/constants/forecast-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { formatDirection } from '@/utils/forecast';
@@ -20,6 +20,7 @@ interface PrimaryConditionsCardProps {
   surfHeightFt: string;
   windDirection: number;
   windSpeedKnots: number;
+  windGustKnots?: number | null;
   testID?: string;
 }
 
@@ -27,166 +28,111 @@ export function PrimaryConditionsCard({
   surfHeightFt,
   windDirection,
   windSpeedKnots,
+  windGustKnots,
   testID,
 }: PrimaryConditionsCardProps) {
   const scheme = useColorScheme();
   const palette = ForecastColors[scheme];
-  const isDark = scheme === 'dark';
-
-  const gradientColors = isDark
-    ? (['#1E3A5F', '#1E293B', '#172033'] as const)
-    : (['#F0F9FF', '#FFFFFF', '#F8FAFC'] as const);
-
-  const accentBarColors = isDark
-    ? (['#38BDF8', '#0EA5E9', '#0284C7'] as const)
-    : (['#7DD3FC', '#38BDF8', '#0284C7'] as const);
 
   return (
-    <View
-      style={[
-        styles.outer,
-        {
-          shadowColor: isDark ? palette.accent : palette.shadow,
-          borderColor: isDark ? '#475569' : '#BAE6FD',
-        },
-      ]}
-      testID={testID}
-    >
-      <LinearGradient
-        colors={gradientColors}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.gradient}
-      >
-        <LinearGradient
-          colors={accentBarColors}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={styles.accentBar}
-        />
-
-        <View
-          style={[
-            styles.glowOrb,
-            { backgroundColor: isDark ? `${palette.accent}18` : `${palette.accent}12` },
-          ]}
-        />
-
-        <View style={styles.content}>
+    <ForecastCard variant="featured" padded={false} style={styles.card} testID={testID}>
+      <View style={styles.row}>
+        <View style={[getForecastInsetStyle(scheme), styles.surfInset]}>
           <ThemedText themeColor="textSecondary" style={styles.surfLabel}>
             Est. surf height
           </ThemedText>
-          <View style={styles.surfRow}>
-            <ThemedText style={styles.surfValue}>{surfHeightFt}</ThemedText>
+          <View style={styles.surfValueRow}>
+            <ThemedText style={[styles.surfValue, { color: palette.accent }]}>
+              {surfHeightFt}
+            </ThemedText>
             <ThemedText themeColor="textSecondary" style={styles.surfUnit}>
               ft
             </ThemedText>
           </View>
-
-          <View style={[styles.windRow, { borderTopColor: isDark ? '#FFFFFF14' : '#64748B18' }]}>
-            <ThemedText themeColor="textSecondary" style={styles.windLabel}>
-              Wind
-            </ThemedText>
-            <DirectionArrow
-              fromDegrees={windDirection}
-              color="#EAB308"
-              size={28}
-              showLabel={false}
-            />
-            <ThemedText style={styles.windDirection}>
-              {formatDirection(windDirection)}
-            </ThemedText>
-            <ThemedText themeColor="textSecondary" style={styles.windDivider}>
-              ·
-            </ThemedText>
-            <ThemedText style={styles.windSpeed}>
-              {formatWindSpeedKnots(windSpeedKnots)}
-            </ThemedText>
-          </View>
         </View>
-      </LinearGradient>
-    </View>
+
+        <View style={[styles.divider, { backgroundColor: palette.borderStrong }]} />
+
+        <View style={styles.windBlock}>
+          <ThemedText themeColor="textSecondary" style={styles.windLabel}>
+            Wind
+          </ThemedText>
+          <DirectionArrow
+            fromDegrees={windDirection}
+            color="#EAB308"
+            size={26}
+            showLabel={false}
+          />
+          <ThemedText style={styles.windDirection}>
+            {formatDirection(windDirection)}
+          </ThemedText>
+          <ThemedText themeColor="textSecondary" style={styles.windSpeed}>
+            {formatWindSpeedKnots(windSpeedKnots, windGustKnots)}
+          </ThemedText>
+        </View>
+      </View>
+    </ForecastCard>
   );
 }
 
 const styles = StyleSheet.create({
-  outer: {
+  card: {
     marginBottom: 6,
-    borderRadius: ForecastRadii.card,
-    borderWidth: 1,
-    overflow: 'hidden',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 18,
-    elevation: 5,
+    padding: 12,
   },
-  gradient: {
-    borderRadius: ForecastRadii.card,
-    overflow: 'hidden',
-    position: 'relative',
+  row: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: 12,
   },
-  accentBar: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 3,
-    borderTopLeftRadius: ForecastRadii.card,
-    borderBottomLeftRadius: ForecastRadii.card,
-  },
-  glowOrb: {
-    position: 'absolute',
-    top: -28,
-    right: -28,
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-  },
-  content: {
-    paddingVertical: 16,
-    paddingHorizontal: 18,
-    paddingLeft: 20,
+  surfInset: {
+    flex: 1.35,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    justifyContent: 'center',
+    gap: 4,
   },
   surfLabel: {
-    ...ForecastTypography.label,
-    marginBottom: 2,
-    letterSpacing: 0.8,
+    ...ForecastTypography.sectionTitle,
+    fontWeight: '600',
   },
-  surfRow: {
+  surfValueRow: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'baseline',
     gap: 4,
-    marginBottom: 12,
   },
   surfValue: {
-    ...ForecastTypography.display,
+    fontSize: 28,
+    lineHeight: 32,
+    fontWeight: '700',
+    letterSpacing: -0.5,
     fontVariant: ['tabular-nums'],
   },
   surfUnit: {
-    ...ForecastTypography.displayUnit,
-    marginBottom: 6,
+    ...ForecastTypography.bodyBold,
+    fontWeight: '500',
   },
-  windRow: {
-    flexDirection: 'row',
+  divider: {
+    width: StyleSheet.hairlineWidth,
+    alignSelf: 'stretch',
+  },
+  windBlock: {
+    flex: 1,
     alignItems: 'center',
-    gap: 6,
-    paddingTop: 12,
-    marginTop: 2,
-    borderTopWidth: 1,
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 4,
   },
   windLabel: {
-    ...ForecastTypography.label,
-    marginRight: 2,
+    ...ForecastTypography.sectionTitle,
+    fontWeight: '600',
   },
   windDirection: {
     ...ForecastTypography.bodyBold,
     fontVariant: ['tabular-nums'],
   },
-  windDivider: {
-    ...ForecastTypography.body,
-  },
   windSpeed: {
-    ...ForecastTypography.bodyBold,
+    ...ForecastTypography.caption,
     fontVariant: ['tabular-nums'],
   },
 });

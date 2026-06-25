@@ -1,427 +1,173 @@
-# Swell Caster Native - Architecture Overview
+# Swell Caster Native — App Architecture
 
-## Project Setup Complete ✓
+Native-specific layers and conventions. For the **full system** (API connection, data flows, external services, and diagrams), see the monorepo doc:
 
-Your React Native project has been set up with industry best practices, including:
-
-- ✅ **API Layer** - Type-safe axios client with interceptors
-- ✅ **Data Fetching** - TanStack Query for server state management
-- ✅ **Reusable Components** - Modular, testable UI components
-- ✅ **Testing Infrastructure** - Jest with passing tests
-- ✅ **TypeScript** - Full type safety matching your API models
-- ✅ **Clean Architecture** - Separation of concerns
-
-## Architecture Layers
-
-### 1. API Service Layer (`src/services/api/`)
-
-**Purpose**: Centralized API communication with type safety
-
-**Files**:
-- `types.ts` - TypeScript interfaces matching your C# API models
-- `config.ts` - API configuration (base URL, timeout, endpoints)
-- `client.ts` - Axios instance with request/response interceptors
-- `endpoints.ts` - Type-safe API methods (getForecast, getCurrent, etc.)
-- `index.ts` - Barrel export for clean imports
-
-**Key Features**:
-- Automatic request/response logging in development
-- Global error handling
-- Request/response interceptors for auth tokens
-- Type-safe API calls
-
-**Example**:
-```typescript
-import { swellApi } from '@/services/api';
-
-const forecast = await swellApi.getForecast({ lat: -33.8568, lon: 151.2153 });
-```
+**→ [../ARCHITECTURE.md](../ARCHITECTURE.md)**
 
 ---
 
-### 2. Data Fetching Layer (`src/hooks/api/`)
+## Stack
 
-**Purpose**: React hooks for data fetching using TanStack Query
-
-**Files**:
-- `use-forecast.ts` - Hook for full forecast data
-- `use-current.ts` - Hook for current conditions
-- `use-hourly.ts` - Hook for hourly forecast  
-- `use-daily.ts` - Hook for daily summary
-- `index.ts` - Barrel export
-
-**Key Features**:
-- Automatic caching (5 min stale time, 10 min cache time)
-- Automatic retries on failure
-- Loading and error states
-- Refetch on window focus (development only)
-- Background refetching
-
-**Example**:
-```typescript
-import { useCurrent } from '@/hooks/api';
-
-function MyComponent() {
-  const { data, isLoading, error, refetch } = useCurrent({
-    lat: -33.8568,
-    lon: 151.2153,
-  });
-
-  if (isLoading) return <Loading />;
-  if (error) return <Error error={error} />;
-  
-  return <Display data={data} />;
-}
-```
+| Layer | Technology |
+| ----- | ---------- |
+| Framework | Expo SDK 56, React Native, Expo Router (native tabs) |
+| Language | TypeScript |
+| Server state | TanStack Query v5 |
+| Client state | Zustand (`selected-location-store`, `theme-store`) |
+| HTTP | Axios via `services/api/client.ts` |
+| Location | `expo-location` via `useDeviceLocation` |
+| Maps | `react-native-maps` (`components/map/surf-map.tsx`) |
 
 ---
 
-### 3. Component Layer (`src/components/`)
+## Directory map
 
-**Purpose**: Reusable, testable UI components
-
-**Structure**:
-```
-src/components/
-├── surf/                    # Surf-specific components
-│   ├── wave-card.tsx       # Display wave data
-│   ├── current-conditions.tsx
-│   └── index.ts
-├── themed-text.tsx          # Existing themed components
-├── themed-view.tsx
-└── ...
-```
-
-**Component Guidelines**:
-1. Single responsibility
-2. TypeScript props interface
-3. `testID` prop for testing
-4. Themed components for styling consistency
-5. Error and loading states handled
-
-**Example**:
-```typescript
-<WaveCard 
-  title="Current Wave" 
-  data={{ height: 1.5, direction: 180, period: 10 }}
-  testID="wave-card"
-/>
-```
-
----
-
-### 4. Provider Layer (`src/providers/`)
-
-**Purpose**: React context providers
-
-**Files**:
-- `query-provider.tsx` - TanStack Query configuration
-
-**Setup**: Already integrated in `_layout.tsx`
-
----
-
-### 5. Testing Layer (`__tests__/`)
-
-**Purpose**: Automated testing with Jest
-
-**Configuration**:
-- `jest.config.js` - Jest configuration
-- `jest.setup.js` - Global mocks and setup
-- `__mocks__/` - Mock files
-
-**Current Coverage**:
-- ✅ API endpoints (5 tests passing)
-- Path aliases working (`@/...`)
-- Axios mocked globally
-- CSS imports mocked
-
-**Run Tests**:
-```bash
-npm test                  # Run all tests
-npm test -- --watch      # Watch mode
-npm test -- --coverage   # Coverage report
-```
-
----
-
-## API Integration
-
-### Available Endpoints
-
-| Hook | API Endpoint | Returns | Use Case |
-|------|-------------|---------|----------|
-| `useForecast` | `/api/swell/forecast` | Full forecast with current, hourly, daily | Dashboard, overview screens |
-| `useCurrent` | `/api/swell/current` | Current conditions only | Quick status widgets |
-| `useHourly` | `/api/swell/hourly` | Hourly forecast array | Hour-by-hour charts |
-| `useDaily` | `/api/swell/daily` | Daily summary array | Multi-day forecasts |
-
-### API Configuration
-
-Update `src/services/api/config.ts`:
-
-```typescript
-export const API_CONFIG = {
-  BASE_URL: __DEV__ 
-    ? 'http://localhost:5000'           // Development
-    : 'https://your-api.com',            // Production
-  TIMEOUT: 10000,
-  ENDPOINTS: { /* ... */ }
-};
-```
-
-For environment variables, create `.env`:
-```
-EXPO_PUBLIC_API_URL=http://localhost:5000
-```
-
-Then use in config:
-```typescript
-BASE_URL: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000'
-```
-
----
-
-## Type System
-
-### Type Flow
-
-```
-C# API Models → TypeScript Types → React Components
-```
-
-**Example Flow**:
-1. C# API returns `CurrentConditions`
-2. TypeScript types defined in `types.ts`
-3. TanStack Query hook typed as `UseQueryResult<CurrentConditions>`
-4. Component receives typed `data: CurrentConditions`
-
-### Adding New Types
-
-When API changes:
-1. Update `src/services/api/types.ts`
-2. Add endpoint to `endpoints.ts`
-3. Create hook in `src/hooks/api/`
-4. Use in components
-
----
-
-## Best Practices Implemented
-
-### Code Organization
-- ✅ Barrel exports (`index.ts`) for clean imports
-- ✅ Colocation (tests near source files)
-- ✅ Feature-based folders (`surf/`, `api/`)
-
-### React Patterns
-- ✅ Custom hooks for data fetching
-- ✅ Compound components pattern
-- ✅ Props interfaces for all components
-- ✅ Error boundaries ready
-
-### API Patterns
-- ✅ Single axios instance
-- ✅ Centralized error handling
-- ✅ Request/response interceptors
-- ✅ Type-safe API calls
-
-### Testing Patterns
-- ✅ Mock at the boundary (axios)
-- ✅ Test behavior, not implementation
-- ✅ Descriptive test names
-- ✅ Arrange-Act-Assert pattern
-
----
-
-## Next Steps
-
-### 1. Update API Configuration
-```bash
-# Edit src/services/api/config.ts
-# Set your API BASE_URL
-```
-
-### 2. Test API Connection
-```bash
-# Start your API
-cd ../SwellCaster.API
-dotnet run
-
-# Start Expo
-cd ../native
-npm start
-```
-
-### 3. Build Your First Screen
-```typescript
-// src/app/surf.tsx
-import { useCurrent } from '@/hooks/api';
-import { CurrentConditions } from '@/components/surf';
-
-export default function SurfScreen() {
-  const { data, isLoading, error } = useCurrent({
-    lat: -33.8915,
-    lon: 151.2767,
-  });
-
-  return (
-    <CurrentConditions
-      data={data}
-      isLoading={isLoading}
-      error={error}
-    />
-  );
-}
-```
-
-### 4. Add More Components
-
-**Create reusable components for**:
-- Hourly forecast list/carousel
-- Daily forecast cards
-- Wave height charts
-- Location selector
-- Forecast details
-
-**Component Template**:
-```typescript
-interface MyComponentProps {
-  data: SomeType;
-  onPress?: () => void;
-  testID?: string;
-}
-
-export function MyComponent({ data, onPress, testID }: MyComponentProps) {
-  return (
-    <ThemedView style={styles.container} testID={testID}>
-      {/* Component content */}
-    </ThemedView>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: { /* styles */ },
-});
-```
-
-### 5. Add Tests
-
-```bash
-# Create test file next to component
-touch src/components/my-component.test.tsx
-
-# Run tests
-npm test -- --watch
-```
-
----
-
-## File Structure Summary
-
-```
-native/
-├── src/
-│   ├── app/                      # Expo Router pages
-│   │   ├── _layout.tsx          # Root layout (QueryProvider added)
-│   │   ├── index.tsx            # Home screen
-│   │   ├── explore.tsx          # Explore screen
-│   │   └── example.tsx          # Example usage ✨
-│   │
-│   ├── services/                 # External services
-│   │   └── api/                 # API layer
-│   │       ├── types.ts         # TypeScript types ✨
-│   │       ├── config.ts        # API configuration ✨
-│   │       ├── client.ts        # Axios instance ✨
-│   │       ├── endpoints.ts     # API methods ✨
-│   │       ├── index.ts         # Exports ✨
-│   │       └── __tests__/       # API tests ✨
-│   │           └── endpoints.test.ts
-│   │
-│   ├── hooks/                    # Custom hooks
-│   │   ├── api/                 # Data fetching hooks
-│   │   │   ├── use-forecast.ts  # ✨
-│   │   │   ├── use-current.ts   # ✨
-│   │   │   ├── use-hourly.ts    # ✨
-│   │   │   ├── use-daily.ts     # ✨
-│   │   │   └── index.ts         # ✨
-│   │   └── ...
-│   │
-│   ├── components/               # UI components
-│   │   ├── surf/                # Surf components
-│   │   │   ├── wave-card.tsx    # ✨
-│   │   │   ├── current-conditions.tsx  # ✨
-│   │   │   └── index.ts         # ✨
-│   │   └── ...
-│   │
-│   ├── providers/                # React providers
-│   │   └── query-provider.tsx   # ✨
-│   │
-│   └── constants/                # App constants
+```text
+native/src/
+├── app/
+│   ├── _layout.tsx          # QueryProvider + ThemeProvider + AppTabs
+│   ├── index.tsx            # Home — GPS/search forecast
+│   └── map.tsx              # Map — spot markers, video, forecast panel
 │
-├── __mocks__/                    # Jest mocks ✨
-│   └── styleMock.js
+├── services/
+│   ├── api/                 # Backend integration
+│   │   ├── config.ts        # Base URL (Metro proxy on device)
+│   │   ├── client.ts        # Axios singleton
+│   │   ├── endpoints.ts     # swellApi, videosApi
+│   │   ├── normalize.ts     # Response normalization
+│   │   └── types.ts         # Types matching C# models
+│   └── tide/
+│       └── open-meteo-tide.ts   # Direct Open-Meteo (tide fallback)
 │
-├── jest.config.js                # Jest configuration ✨
-├── jest.setup.js                 # Jest setup ✨
-├── tsconfig.json                 # TypeScript config
-├── package.json                  # Dependencies ✨
-├── .env.example                  # Environment template ✨
-├── README.md                     # Documentation ✨
-└── QUICKSTART.md                 # Quick reference ✨
-
-✨ = New or updated files
+├── hooks/
+│   ├── api/                 # TanStack Query hooks
+│   │   ├── use-forecast.ts
+│   │   ├── use-current.ts
+│   │   ├── use-hourly.ts
+│   │   ├── use-daily.ts
+│   │   └── use-condition-videos.ts
+│   ├── use-curated-spots.ts
+│   ├── use-curated-spot-conditions.ts
+│   ├── use-map-spot-markers.ts
+│   ├── use-device-location.ts
+│   └── use-day-overview.ts
+│
+├── components/
+│   ├── forecast/            # Daily cards, hourly detail, location sections
+│   ├── charts/              # Wave height, tide, line charts
+│   ├── map/                 # SurfMap, markers, selection pin
+│   ├── condition-video/     # Record + player
+│   ├── surf/                # WaveCard, CurrentConditions
+│   └── ui/                  # Shared forecast UI primitives
+│
+├── stores/
+│   ├── selected-location-store.ts   # Manual location override
+│   └── recent-location-search-store.ts
+│
+└── utils/
+    ├── surf-height.ts       # Display conversions
+    ├── forecast.ts          # Rating colors, labels
+    ├── day-overview.ts      # Outlook bullet generation
+    ├── daily-hourly-forecast.ts
+    └── coordinates.ts       # Curated spot matching
 ```
 
 ---
 
-## Commands Reference
+## Data flow (native only)
+
+```mermaid
+flowchart LR
+    Screen["Screen<br/>(index / map)"]
+    Hook["hooks/api/*"]
+    API["services/api/endpoints"]
+    Axios["client.ts"]
+    Backend["SwellCaster.API"]
+
+    Screen --> Hook
+    Hook --> API
+    API --> Axios
+    Axios --> Backend
+    Backend --> Axios
+    Axios --> API
+    API --> Normalize["normalize.ts"]
+    Normalize --> Hook
+    Hook --> Screen
+```
+
+Screens never call axios directly — always go through hooks → `swellApi` / `videosApi`.
+
+---
+
+## Screens
+
+### Home (`app/index.tsx`)
+
+1. Resolve location: Zustand manual coords **or** `useDeviceLocation` GPS
+2. Match coords to curated spot name via `useCuratedSpots`
+3. Fetch `useForecast({ lat, lon, days })`
+4. Render `LocationForecastSections` — primary conditions, charts, daily/hourly outlook
+
+### Map (`app/map.tsx`)
+
+1. Load all spot markers via `useMapSpotMarkers` (conditions + spot metadata)
+2. Load active video pins via condition video hooks
+3. On marker tap → fetch forecast for selected coords + optional video at location
+4. `RecordConditionVideoButton` uploads from user's GPS at the break
+
+---
+
+## API hooks reference
+
+| Hook | Endpoint | Stale time |
+| ---- | -------- | ---------- |
+| `useForecast` | `/api/swell/forecast` | 15 min |
+| `useCurrent` | `/api/swell/current` | 5 min |
+| `useHourly` | `/api/swell/hourly` | 5 min |
+| `useDaily` | `/api/swell/daily` | 5 min |
+| `useCuratedSpotConditions` | `/api/places/spots/conditions` | 15 min |
+| `useCuratedSpots` | `/api/places/spots` | 30 min |
+| `useConditionVideoAt` | `/api/videos/at` | 5 min |
+| `useActiveConditionVideos` | `/api/videos/active` | 5 min |
+
+Query client defaults (`providers/query-provider.tsx`): 5 min stale, 15 min GC, 1 retry, no refetch on focus.
+
+---
+
+## Dev API URL
+
+Resolved in `services/api/config.ts`:
+
+| Environment | URL |
+| ----------- | --- |
+| Simulator/emulator | `http://localhost:5213` |
+| Physical device | `http://<mac-ip>:8081` (Metro proxies to API) |
+| Override | `EXPO_PUBLIC_API_URL` in `.env` |
+
+Proxy implementation: `metro.config.js` at project root.
+
+---
+
+## Testing
 
 ```bash
-# Development
-npm start                # Start Expo dev server
-npm run ios             # Run on iOS
-npm run android         # Run on Android  
-npm run web             # Run on web
-
-# Testing
-npm test                # Run tests once
-npm test -- --watch     # Watch mode
-npm test -- --coverage  # Coverage report
-
-# Linting
-npm run lint            # Run linter
+npm test                  # Jest — utils, API endpoints, hooks
+npm test -- --coverage
 ```
 
----
-
-## Resources
-
-- **Expo v56 Docs**: https://docs.expo.dev/versions/v56.0.0/
-- **TanStack Query**: https://tanstack.com/query/latest
-- **React Native**: https://reactnative.dev/
-- **Testing Library**: https://callstack.github.io/react-native-testing-library/
+Tests mock axios at the API boundary. Key suites:
+- `services/api/__tests__/endpoints.test.ts`
+- `utils/__tests__/*.test.ts`
+- `hooks/__tests__/api-rate-limits.test.ts`
 
 ---
 
-## Support Files Created
+## Related docs
 
-1. `README.md` - Full documentation
-2. `QUICKSTART.md` - Quick reference guide
-3. `ARCHITECTURE.md` - This file
-4. `.env.example` - Environment template
-5. Example screen showing usage
-
----
-
-## Summary
-
-Your project is now ready for development with:
-
-- ✅ **Clean architecture** with clear separation of concerns
-- ✅ **Type-safe API integration** with your C# backend
-- ✅ **Modern data fetching** with TanStack Query
-- ✅ **Reusable components** ready to build on
-- ✅ **Testing infrastructure** with passing tests
-- ✅ **Best practices** throughout the codebase
-
-**Next**: Update the API URL and start building your screens!
+| Doc | Topic |
+| --- | ----- |
+| [../ARCHITECTURE.md](../ARCHITECTURE.md) | Full system architecture |
+| [QUICKSTART.md](./QUICKSTART.md) | Run API + app locally |
+| [docs/FORECAST_UI.md](./docs/FORECAST_UI.md) | Forecast screen components |
+| [docs/SURF_FORECAST_VIDEOS.md](./docs/SURF_FORECAST_VIDEOS.md) | Video recording UX |
+| [SURF_HEIGHT.md](./SURF_HEIGHT.md) | Surf height display logic |

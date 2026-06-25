@@ -20,8 +20,7 @@ import {
 import {
   findTideExtremes,
   formatTideExtremeLabel,
-  formatTideHeightFt,
-  seaLevelToFeet,
+  formatTideHeightM,
   type TidePoint,
 } from '@/utils/tide';
 
@@ -87,7 +86,7 @@ export function TideChart({ data, lat, lon, testID }: TideChartProps) {
   const points: ForecastLinePoint[] = useMemo(
     () =>
       chartData.map((item, index) => ({
-        value: Number(seaLevelToFeet(seaLevelsM[index] ?? 0).toFixed(2)),
+        value: Number((seaLevelsM[index] ?? 0).toFixed(2)),
         label:
           index % 4 === 0
             ? `${new Date(item.timestamp).getHours().toString().padStart(2, '0')}`
@@ -117,7 +116,7 @@ export function TideChart({ data, lat, lon, testID }: TideChartProps) {
         title="Tide"
         subtitle="Sea level · next 24 hours"
         action={
-          hasTide ? `Now ${formatTideHeightFt(seaLevelsM[0] ?? 0)}` : undefined
+          hasTide ? `Now ${formatTideHeightM(seaLevelsM[0] ?? 0)}` : undefined
         }
       >
         {isLoadingFallback ? (
@@ -140,7 +139,7 @@ export function TideChart({ data, lat, lon, testID }: TideChartProps) {
 
             <View style={styles.footer}>
               <ThemedText themeColor="textSecondary" style={styles.footerText}>
-                Range {minHeight.toFixed(1)} – {maxHeight.toFixed(1)} ft · est.
+                Range {minHeight.toFixed(2)} – {maxHeight.toFixed(2)} m · est.
                 model tide
               </ThemedText>
               {extremes.length > 0 ? (

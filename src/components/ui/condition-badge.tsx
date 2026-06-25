@@ -11,10 +11,16 @@ import {
   getSurfRating,
   type SurfRating,
 } from '@/utils/forecast';
+import { rateGenericCoastal } from '@/utils/spot-quality';
+import type { SurfHeightComponents } from '@/utils/surf-height';
 
 interface ConditionBadgeProps {
   swellHeightM: number;
   swellPeriodS?: number;
+  swellDirection?: number;
+  wave?: SurfHeightComponents;
+  windDirection?: number;
+  windSpeedKnots?: number;
   /** Pre-computed rating from API (preferred for curated spots). */
   rating?: SurfRating | null;
   compact?: boolean;
@@ -23,11 +29,22 @@ interface ConditionBadgeProps {
 export function ConditionBadge({
   swellHeightM,
   swellPeriodS = 8,
+  swellDirection,
+  wave,
+  windDirection,
+  windSpeedKnots,
   rating,
   compact = false,
 }: ConditionBadgeProps) {
   const resolved =
-    rating ?? getSurfRating(swellHeightM, swellPeriodS);
+    rating ??
+    (swellDirection != null && windDirection != null && windSpeedKnots != null
+      ? rateGenericCoastal(
+          wave ?? { height: swellHeightM, period: swellPeriodS },
+          { height: swellHeightM, period: swellPeriodS, direction: swellDirection },
+          { direction: windDirection, speedKnots: windSpeedKnots }
+        )
+      : getSurfRating(swellHeightM, swellPeriodS));
   const color = getRatingColor(resolved);
 
   return (

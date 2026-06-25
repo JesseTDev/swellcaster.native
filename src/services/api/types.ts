@@ -27,6 +27,7 @@ export interface WindWaveData {
 export interface WindData {
   speedKnots: number;
   direction: number;
+  gustKnots?: number | null;
 }
 
 export interface CurrentConditions {
@@ -141,7 +142,7 @@ export interface ConditionVideo {
   spotName?: string;
   lat: number;
   lon: number;
-  provider: 'youtube' | 'local' | string;
+  provider: 'local' | string;
   providerVideoId: string;
   embedUrl: string;
   thumbnailUrl?: string;

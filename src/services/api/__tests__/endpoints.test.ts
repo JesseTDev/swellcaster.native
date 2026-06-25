@@ -68,7 +68,7 @@ describe('Swell API Endpoints', () => {
         { params: mockParams }
       );
       expect(result.seaLevelHeightM).toBe(0);
-      expect(result.wind).toEqual({ speedKnots: 12, direction: 195 });
+      expect(result.wind).toEqual({ speedKnots: 12, direction: 195, gustKnots: null });
     });
   });
 

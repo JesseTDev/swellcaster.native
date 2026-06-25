@@ -3,16 +3,25 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Appearance, type ColorSchemeName } from 'react-native';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 export type ThemePreference = 'system' | 'light' | 'dark';
 
-const CYCLE_ORDER: ThemePreference[] = ['system', 'light', 'dark'];
-
 interface ThemeState {
   preference: ThemePreference;
+  /** Flip the active light/dark appearance in one tap. */
   cyclePreference: () => void;
+}
+
+export function resolveColorScheme(
+  preference: ThemePreference,
+  systemScheme: ColorSchemeName | null | undefined
+): 'light' | 'dark' {
+  if (preference === 'light') return 'light';
+  if (preference === 'dark') return 'dark';
+  return systemScheme === 'dark' ? 'dark' : 'light';
 }
 
 export const useThemeStore = create<ThemeState>()(
@@ -20,9 +29,9 @@ export const useThemeStore = create<ThemeState>()(
     (set, get) => ({
       preference: 'system',
       cyclePreference: () => {
-        const current = get().preference;
-        const next = CYCLE_ORDER[(CYCLE_ORDER.indexOf(current) + 1) % CYCLE_ORDER.length];
-        set({ preference: next });
+        const { preference } = get();
+        const resolved = resolveColorScheme(preference, Appearance.getColorScheme());
+        set({ preference: resolved === 'dark' ? 'light' : 'dark' });
       },
     }),
     {

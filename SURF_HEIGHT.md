@@ -73,18 +73,22 @@ Swell **direction** is always used separately for spot alignment scoring on the 
 
 ## Step 2 — Period factor (offshore → breaking)
 
-Offshore significant height is scaled down to approximate **breaking face height** on the beach. Longer-period swell carries more energy per metre of height, so the factor increases with period:
+Offshore significant height is scaled to approximate **reported surf face** in foot bins. Open-Meteo `wave_height` is deep-water Hs — it already embeds swell energy, so **longer period uses a lower factor**, not a higher one.
 
-| Period (s) | Factor | Meaning |
-| ---------- | ------ | ------- |
-| &lt; 6 | 0.55 | Short chop — much is lost before the beach |
-| 6 – 8 | 0.62 | Wind swell / mixed |
-| 8 – 10 | 0.68 | Decent swell |
-| 10 – 12 | 0.74 | Solid ground swell |
-| ≥ 12 | 0.80 | Long-period swell |
+| Period (s) | Base factor | Notes |
+| ---------- | ----------- | ----- |
+| &lt; 6 | 0.52 | Wind swell / mixed chop |
+| 6 – 8 | 0.50 | |
+| 8 – 10 | 0.46 | Typical SW swell (e.g. Margaret River) |
+| 10 – 12 | 0.43 | |
+| ≥ 12 | 0.40 | |
+
+**Size boost** (exposed breaks on bigger swell days): ×1.06 when Hs ≥ 2.0 m, ×1.12 when Hs ≥ 2.5 m.
+
+When swell is **≥ 88%** of total wave height, use **swell height + swell period** as input (swell-dominant days).
 
 ```
-breakingHeightM = inputHeightM × surfFactor(periodS)
+breakingHeightM = inputHeightM × surfFactor(periodS, heightM)
 breakingHeightFt = breakingHeightM × 3.28084
 ```
 

@@ -1,42 +1,33 @@
 /**
- * ThemeToggleButton — cycle System → Light → Dark
+ * ThemeToggleButton — toggle light / dark in one tap
  */
 
 import { PlatformSymbol, type PlatformSymbolName } from '@/components/ui/platform-symbol';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { ForecastColors, getForecastCardStyle } from '@/constants/forecast-theme';
-import { useColorScheme, useThemePreference } from '@/hooks/use-color-scheme';
-import { useThemeStore, themePreferenceLabel, type ThemePreference } from '@/stores/theme-store';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useThemeStore } from '@/stores/theme-store';
 
-function iconForPreference(preference: ThemePreference): PlatformSymbolName {
-  switch (preference) {
-    case 'system':
-      return {
-        ios: 'circle.lefthalf.filled',
-        android: 'brightness-auto',
-        web: 'brightness-auto',
-      };
-    case 'light':
-      return {
+function iconForScheme(scheme: 'light' | 'dark'): PlatformSymbolName {
+  return scheme === 'dark'
+    ? {
+        ios: 'moon.fill',
+        android: 'dark-mode',
+        web: 'dark-mode',
+      }
+    : {
         ios: 'sun.max.fill',
         android: 'light-mode',
         web: 'light-mode',
       };
-    case 'dark':
-      return {
-        ios: 'moon.fill',
-        android: 'dark-mode',
-        web: 'dark-mode',
-      };
-  }
 }
 
 export function ThemeToggleButton() {
-  const preference = useThemePreference();
   const scheme = useColorScheme();
   const cyclePreference = useThemeStore((state) => state.cyclePreference);
   const palette = scheme === 'dark' ? ForecastColors.dark : ForecastColors.light;
+  const nextScheme = scheme === 'dark' ? 'light' : 'dark';
 
   return (
     <Pressable
@@ -47,11 +38,11 @@ export function ThemeToggleButton() {
       ]}
       onPress={cyclePreference}
       accessibilityRole="button"
-      accessibilityLabel={`Theme: ${themePreferenceLabel(preference)}. Tap to change.`}
+      accessibilityLabel={`Theme: ${scheme}. Tap for ${nextScheme}.`}
       hitSlop={8}
     >
       <PlatformSymbol
-        name={iconForPreference(preference)}
+        name={iconForScheme(scheme)}
         size={18}
         weight="medium"
         tintColor={palette.accent}

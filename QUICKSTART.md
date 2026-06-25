@@ -34,7 +34,7 @@ Leave this terminal running.
 ### API config (optional)
 
 - Local secrets: copy `appsettings.Development.local.json.example` → `appsettings.Development.local.json`
-- Condition videos (dev): `Videos:Provider` = `local` in user secrets — see [docs/SURF_FORECAST_VIDEOS.md](./docs/SURF_FORECAST_VIDEOS.md) and API [CONDITION_VIDEOS.md](../SwellCaster.API/CONDITION_VIDEOS.md)
+- Condition videos: stored on API disk — see [docs/SURF_FORECAST_VIDEOS.md](./docs/SURF_FORECAST_VIDEOS.md) and API [CONDITION_VIDEOS.md](../SwellCaster.API/CONDITION_VIDEOS.md)
 
 ---
 
@@ -149,7 +149,7 @@ The native app does **not** call Open-Meteo directly for forecasts (except tide 
 
 To test crowdsourced live videos on the map:
 
-1. Set local video hosting: `dotnet user-secrets set "Videos:Provider" "local"` in `SwellCaster.API`.
+1. Start the API: `dotnet run --launch-profile http` in `SwellCaster.API`.
 2. Open the **Map** tab on your phone; enable **location** and **camera** for Expo Go.
 3. Tap **Record a surf forecast video**, film a short clip, then tap the **film icon** on the map to watch it.
 

@@ -14,16 +14,27 @@ import { ForecastCard } from '@/components/ui/forecast-card';
 import { ForecastColors } from '@/constants/forecast-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import type { ForecastHour } from '@/services/api';
-import { estimateSurfHeightFtFromConditions } from '@/utils/surf-height';
+import { estimateSurfHeightFtFromConditions, type SurfEstimateContext } from '@/utils/surf-height';
 
 interface WaveHeightChartProps {
   data: ForecastHour[];
+  surfContext?: Pick<SurfEstimateContext, 'shoreBearing' | 'breakType'>;
   testID?: string;
 }
 
-function buildChartPoints(data: ForecastHour[]): ForecastLinePoint[] {
+function buildChartPoints(
+  data: ForecastHour[],
+  surfContext?: Pick<SurfEstimateContext, 'shoreBearing' | 'breakType'>
+): ForecastLinePoint[] {
   return data.slice(0, 24).map((item, index) => {
-    const ft = estimateSurfHeightFtFromConditions(item.wave, item.swell);
+    const context: SurfEstimateContext | undefined = surfContext
+      ? {
+          ...surfContext,
+          swellDirection: item.swell.direction,
+          windWaveHeight: item.windWave.height,
+        }
+      : undefined;
+    const ft = estimateSurfHeightFtFromConditions(item.wave, item.swell, context);
     const value = Number.isFinite(ft) ? Number(ft.toFixed(2)) : 0;
     const label =
       index % 4 === 0
@@ -34,7 +45,7 @@ function buildChartPoints(data: ForecastHour[]): ForecastLinePoint[] {
   });
 }
 
-export function WaveHeightChart({ data, testID }: WaveHeightChartProps) {
+export function WaveHeightChart({ data, surfContext, testID }: WaveHeightChartProps) {
   const scheme = useColorScheme();
   const palette = scheme === 'dark' ? ForecastColors.dark : ForecastColors.light;
 
@@ -43,7 +54,7 @@ export function WaveHeightChart({ data, testID }: WaveHeightChartProps) {
     return null;
   }
 
-  const points = buildChartPoints(chartData);
+  const points = buildChartPoints(chartData, surfContext);
   const values = points.map((p) => p.value);
   const maxHeight = Math.max(...values, 0);
   const minHeight = Math.min(...values, 0);

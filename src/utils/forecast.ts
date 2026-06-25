@@ -40,3 +40,50 @@ export function formatRatingLabel(rating: SurfRating): string {
 }
 
 export const SURF_RATINGS: SurfRating[] = ['bad', 'good', 'very good', 'amazing'];
+
+export function isGoodSurfRating(rating: SurfRating): boolean {
+  return rating !== 'bad';
+}
+
+export function formatWindBrief(directionDeg: number, speedKnots: number): string {
+  return `${formatDirection(directionDeg)} ${Math.round(speedKnots)} kt`;
+}
+
+export function dominantCompassDirection(degrees: number[]): string {
+  if (degrees.length === 0) return 'N';
+
+  const counts = new Map<string, number>();
+  for (const deg of degrees) {
+    const dir = formatDirection(deg);
+    counts.set(dir, (counts.get(dir) ?? 0) + 1);
+  }
+
+  let bestDir = formatDirection(degrees[0]);
+  let bestCount = 0;
+  for (const [dir, count] of counts) {
+    if (count > bestCount) {
+      bestDir = dir;
+      bestCount = count;
+    }
+  }
+
+  return bestDir;
+}
+
+const STRONG_WIND_KNOTS = 15;
+const LIGHT_WIND_KNOTS = 8;
+
+/** Short wind phrase for day-level overview copy. */
+export function buildWindOverviewPhrase(
+  avgKnots: number,
+  maxKnots: number,
+  dominantDir: string
+): string {
+  if (avgKnots >= STRONG_WIND_KNOTS) {
+    return `${dominantDir} wind averaging ${Math.round(avgKnots)} kt, gusting to ${Math.round(maxKnots)} kt`;
+  }
+  if (avgKnots >= LIGHT_WIND_KNOTS) {
+    return `${dominantDir} wind around ${Math.round(avgKnots)} kt`;
+  }
+  return `light ${dominantDir} wind`;
+}

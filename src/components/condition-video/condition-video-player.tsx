@@ -1,10 +1,9 @@
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { StyleSheet, View } from 'react-native';
-import { WebView } from 'react-native-webview';
 
 import { ThemedText } from '@/components/themed-text';
 import type { ConditionVideo } from '@/services/api/types';
-import { isYouTubeVideo, resolveVideoEmbedUrl } from '@/utils/video-url';
+import { resolveVideoEmbedUrl } from '@/utils/video-url';
 
 interface ConditionVideoPlayerProps {
   video: ConditionVideo;
@@ -27,25 +26,6 @@ function LocalVideoPlayer({ uri, height }: { uri: string; height: number }) {
   );
 }
 
-function YouTubeEmbedPlayer({ embedUrl, height }: { embedUrl: string; height: number }) {
-  const html = `<!DOCTYPE html>
-<html><head><meta name="viewport" content="width=device-width, initial-scale=1">
-<style>*{margin:0;padding:0}body{background:#000}iframe{width:100%;height:100vh;border:0}</style>
-</head><body>
-<iframe src="${embedUrl}" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-</body></html>`;
-
-  return (
-    <WebView
-      source={{ html }}
-      style={[styles.player, { height }]}
-      allowsInlineMediaPlayback
-      mediaPlaybackRequiresUserAction={false}
-      javaScriptEnabled
-    />
-  );
-}
-
 export function ConditionVideoPlayer({ video, height = 200 }: ConditionVideoPlayerProps) {
   const embedUrl = resolveVideoEmbedUrl(video);
 
@@ -58,11 +38,7 @@ export function ConditionVideoPlayer({ video, height = 200 }: ConditionVideoPlay
           minute: '2-digit',
         })}
       </ThemedText>
-      {isYouTubeVideo(video) ? (
-        <YouTubeEmbedPlayer embedUrl={embedUrl} height={height} />
-      ) : (
-        <LocalVideoPlayer uri={embedUrl} height={height} />
-      )}
+      <LocalVideoPlayer uri={embedUrl} height={height} />
     </View>
   );
 }

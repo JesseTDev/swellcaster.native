@@ -14,8 +14,12 @@ export function formatWaveHeightValueFeet(meters: number, decimals = 1): string 
   return metersToFeet(meters).toFixed(decimals);
 }
 
-export function formatWindSpeedKnots(knots: number): string {
-  return `${Math.round(knots)} kt`;
+export function formatWindSpeedKnots(knots: number, gustKnots?: number | null): string {
+  const base = `${Math.round(knots)} kt`;
+  if (gustKnots != null && gustKnots > knots + 1) {
+    return `${base} (gusts ${Math.round(gustKnots)})`;
+  }
+  return base;
 }
 
 export const WAVE_HEIGHT_UNIT = 'ft';

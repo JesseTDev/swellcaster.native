@@ -2,7 +2,7 @@
 
 Crowdsourced **live surf forecast videos** pinned to GPS coordinates on the map. Users film conditions at any break — including spots not in our database — so others can see what it actually looks like before they go.
 
-This feature connects the **Swell Caster YouTube channel** (production) or **local disk** (development) to the native app map.
+This feature stores crowdsourced clips on the **API disk** (`Uploads/videos/`) and serves them to the native app map.
 
 ---
 
@@ -65,7 +65,7 @@ flowchart TB
     VC[VideosController]
     CVS[ConditionVideoService]
     DB[(PostgreSQL)]
-    Host[Video host: local disk or YouTube]
+    Host[Video host: local disk]
     Purge[VideoPurgeHostedService every 30 min]
     Swell[Swell / Open-Meteo]
   end
@@ -109,7 +109,7 @@ Configured in API `Videos:LocationMatchRadiusMeters` (default `400`).
 
 ### TTL (12 hours)
 
-Each video has `ExpiresAtUtc = CreatedAtUtc + 12 hours`. A background service runs every **30 minutes** and deletes expired videos from the host (YouTube or disk) and the database.
+Each video has `ExpiresAtUtc = CreatedAtUtc + 12 hours`. A background service runs every **30 minutes** and deletes expired videos from disk and the database.
 
 ---
 
@@ -172,7 +172,7 @@ interface ConditionVideo {
   spotName?: string;
   lat: number;
   lon: number;
-  provider: 'youtube' | 'local' | string;
+  provider: 'local' | string;
   providerVideoId: string;
   embedUrl: string;
   thumbnailUrl?: string;
@@ -193,7 +193,7 @@ interface ConditionVideo {
 | `src/components/map/surf-map.tsx` | MapView, spot markers, film markers, tap handlers |
 | `src/components/map/video-map-marker.tsx` | Film icon UI |
 | `src/components/condition-video/record-condition-video-button.tsx` | Camera + upload |
-| `src/components/condition-video/condition-video-player.tsx` | Local MP4 (expo-video) or YouTube (WebView) |
+| `src/components/condition-video/condition-video-player.tsx` | Local MP4 via expo-video |
 | `src/hooks/api/use-condition-videos.ts` | `useActiveConditionVideos`, `useConditionVideoAt` |
 | `src/services/api/endpoints.ts` | `videosApi.getActive`, `getAt`, `upload` |
 | `src/hooks/use-device-location.ts` | GPS for recording |
@@ -219,32 +219,24 @@ Film icon tap calls `handleSelectVideo(video)` which sets coords from the video 
 
 ## Video hosting
 
-### Local development (recommended)
+Videos are stored on the API server under `Uploads/videos/` and served at `/uploads/videos/{id}.mp4`.
 
 ```bash
 cd SwellCaster.API
-dotnet user-secrets set "Videos:Provider" "local"
 dotnet run --launch-profile http
 ```
 
-Files save to `SwellCaster.API/Uploads/videos/` and serve at `/uploads/videos/{id}.mp4`. No Google/YouTube setup required.
-
-### Production (YouTube)
-
-Set `Videos:Provider` to `youtube` and configure OAuth refresh token for the **swellcaster** channel. See [CONDITION_VIDEOS.md](../../SwellCaster.API/CONDITION_VIDEOS.md) in the API repo.
-
-Videos upload as **unlisted** and are deleted from YouTube when expired or replaced.
+Metro proxies `/uploads/*` to the API during phone dev so clips play in the app.
 
 ---
 
 ## Development checklist
 
 1. **API running** on port `5213` (`dotnet run --launch-profile http`).
-2. **Videos:Provider** = `local` in user secrets.
-3. **Native app** via `npm run start:phone` — Metro proxies `/api/*` to the Mac.
-4. **Location + camera** enabled on the phone for Expo Go.
-5. Record a short clip on the **Map** tab → film icon should appear after upload.
-6. Tap the film icon → video and conditions in the bottom panel.
+2. **Native app** via `npm run start:phone` — Metro proxies `/api/*` and `/uploads/*` to the Mac.
+3. **Location + camera** enabled on the phone for Expo Go.
+4. Record a short clip on the **Map** tab → film icon should appear after upload.
+5. Tap the film icon → video and conditions in the bottom panel.
 
 ### Restarting the API safely
 
@@ -276,5 +268,7 @@ If you see `Address already in use`, the previous API instance is still running.
 ## Related documentation
 
 - [QUICKSTART.md](../QUICKSTART.md) — full local dev setup
-- [CONDITION_VIDEOS.md](../../SwellCaster.API/CONDITION_VIDEOS.md) — API config and YouTube OAuth
+- [SwellCaster.API/docs/VIDEOS.md](../../SwellCaster.API/docs/VIDEOS.md) — API upload flow, hosting, purge
+- [SwellCaster.API/docs/DATABASE.md](../../SwellCaster.API/docs/DATABASE.md) — `condition_videos` schema and migrations
+- [CONDITION_VIDEOS.md](../../SwellCaster.API/CONDITION_VIDEOS.md) — API config
 - [ARCHITECTURE.md](../ARCHITECTURE.md) — native app structure

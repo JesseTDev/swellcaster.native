@@ -2,7 +2,7 @@
  * Tide helpers — sea level from Open-Meteo (sea_level_height_msl)
  */
 
-import { metersToFeet } from '@/utils/units';
+import type { ForecastHour } from '@/services/api/types';
 
 export interface TidePoint {
   timestamp: string;
@@ -12,15 +12,11 @@ export interface TidePoint {
 export interface TideExtreme {
   type: 'high' | 'low';
   timestamp: string;
-  heightFt: number;
+  heightM: number;
 }
 
-export function formatTideHeightFt(meters: number, decimals = 1): string {
-  return `${metersToFeet(meters).toFixed(decimals)} ft`;
-}
-
-export function seaLevelToFeet(meters: number): number {
-  return metersToFeet(meters);
+export function formatTideHeightM(meters: number, decimals = 2): string {
+  return `${meters.toFixed(decimals)} m`;
 }
 
 export function findTideExtremes(
@@ -42,13 +38,13 @@ export function findTideExtremes(
       extremes.push({
         type: 'high',
         timestamp: slice[i].timestamp,
-        heightFt: seaLevelToFeet(curr),
+        heightM: curr,
       });
     } else if (curr < prev && curr < next) {
       extremes.push({
         type: 'low',
         timestamp: slice[i].timestamp,
-        heightFt: seaLevelToFeet(curr),
+        heightM: curr,
       });
     }
   }
@@ -65,5 +61,30 @@ export function formatTideTime(timestamp: string): string {
 
 export function formatTideExtremeLabel(extreme: TideExtreme): string {
   const label = extreme.type === 'high' ? 'High' : 'Low';
-  return `${label} ${formatTideTime(extreme.timestamp)} · ${extreme.heightFt.toFixed(1)} ft`;
+  return `${label} ${formatTideTime(extreme.timestamp)} · ${extreme.heightM.toFixed(2)} m`;
+}
+
+export function tidePointsFromForecastHours(hours: ForecastHour[]): TidePoint[] {
+  return hours.flatMap((hour) =>
+    hour.seaLevelHeightM == null
+      ? []
+      : [{ timestamp: hour.timestamp, seaLevelHeightM: hour.seaLevelHeightM }]
+  );
+}
+
+export function formatUpcomingTideHighlights(
+  tidePoints: TidePoint[],
+  referenceTime: Date = new Date(),
+  maxHighlights = 2
+): string[] {
+  const nowMs = referenceTime.getTime();
+  const remaining = tidePoints.filter(
+    (point) => new Date(point.timestamp).getTime() >= nowMs
+  );
+  const extremes = findTideExtremes(remaining, remaining.length, maxHighlights);
+
+  return extremes.map((extreme) => {
+    const label = extreme.type === 'high' ? 'High tide' : 'Low tide';
+    return `${label} around ${formatTideTime(extreme.timestamp)} (${extreme.heightM.toFixed(1)} m)`;
+  });
 }
