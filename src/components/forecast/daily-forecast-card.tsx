@@ -22,17 +22,25 @@ import {
   pickAnchorSnapshots,
 } from '@/utils/daily-hourly-forecast';
 import { formatDirection } from '@/utils/forecast';
-import { formatSurfHeightRangeFromConditions } from '@/utils/surf-height';
+import {
+  formatSurfFtRangeFromValues,
+  formatSurfHeightRangeFromConditions,
+  type SurfEstimateContext,
+} from '@/utils/surf-height';
 import { formatWaveHeightValueFeet, WAVE_HEIGHT_UNIT } from '@/utils/units';
 
 interface DailyForecastCardProps {
   data: DailySummary;
   dayHours?: ForecastHour[];
   isToday?: boolean;
+  surfContext?: Pick<
+    SurfEstimateContext,
+    'shoreBearing' | 'breakType'
+  >;
   testID?: string;
 }
 
-export function DailyForecastCard({ data, dayHours = [], isToday, testID }: DailyForecastCardProps) {
+export function DailyForecastCard({ data, dayHours = [], isToday, surfContext, testID }: DailyForecastCardProps) {
   const scheme = useColorScheme();
   const palette = ForecastColors[scheme];
   const [expanded, setExpanded] = useState(isToday ?? false);
@@ -42,11 +50,23 @@ export function DailyForecastCard({ data, dayHours = [], isToday, testID }: Dail
   const dateLabel = date.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
   const wind = data.wind;
   const rating = data.rating;
-  const surfRange = formatSurfHeightRangeFromConditions(
-    { height: data.wave.maxHeight, period: data.wave.maxPeriod },
-    { height: data.swell.maxHeight, period: data.swell.maxPeriod }
-  );
-  const hourlySnapshots = buildHourlySnapshots(dayHours);
+  const hourlySnapshots = buildHourlySnapshots(dayHours, surfContext);
+  // Prefer the same per-hour pipeline the top reading and chart use so the
+  // outlook never disagrees with them. Fall back to the daily peak (carrying
+  // the dominant swell direction so break attenuation still applies) when a
+  // day has no hourly rows.
+  const surfRange =
+    hourlySnapshots.length > 0
+      ? formatSurfFtRangeFromValues(hourlySnapshots.map((snapshot) => snapshot.surfFt))
+      : formatSurfHeightRangeFromConditions(
+          { height: data.wave.maxHeight, period: data.wave.maxPeriod },
+          {
+            height: data.swell.maxHeight,
+            period: data.swell.maxPeriod,
+            direction: data.swell.dominantDirection,
+          },
+          surfContext
+        );
   const anchorSnapshots = pickAnchorSnapshots(
     hourlySnapshots,
     hourlySnapshots[0]?.hour ?? 0

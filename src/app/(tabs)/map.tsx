@@ -15,6 +15,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LocationSearchBar } from '@/components/location-search-bar';
+import { UserAccountButton } from '@/components/auth';
 import {
   ConditionVideoPlayer,
   RecordConditionVideoButton,
@@ -172,7 +173,10 @@ export default function MapScreen() {
           <ThemedText type="smallBold" style={styles.compactTitle}>
             Surf map
           </ThemedText>
-          <ThemeToggleButton />
+          <View style={styles.headerActions}>
+            <UserAccountButton />
+            <ThemeToggleButton />
+          </View>
         </View>
 
         <LocationSearchBar
@@ -325,6 +329,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: Spacing.one,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   compactTitle: {
     ...ForecastTypography.sectionTitle,

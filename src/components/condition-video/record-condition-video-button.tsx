@@ -1,6 +1,8 @@
+import { useAuth } from '@clerk/expo';
 import { useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from 'react-native';
 
@@ -29,9 +31,16 @@ export function RecordConditionVideoButton({
   const scheme = useColorScheme();
   const palette = scheme === 'dark' ? ForecastColors.dark : ForecastColors.light;
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const { isSignedIn, isLoaded } = useAuth();
   const [uploading, setUploading] = useState(false);
 
   const handlePress = async () => {
+    if (isLoaded && !isSignedIn) {
+      router.push('/sign-in');
+      return;
+    }
+
     if (disabled || uploading) {
       if (disabled && disabledHint) {
         Alert.alert('Location required', disabledHint);

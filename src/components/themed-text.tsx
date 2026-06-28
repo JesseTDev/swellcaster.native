@@ -1,5 +1,6 @@
 import { Platform, StyleSheet, Text, type TextProps } from 'react-native';
 
+import { AppFonts } from '@/constants/fonts';
 import { Fonts, ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -42,9 +43,10 @@ const styles = StyleSheet.create({
     fontWeight: 700,
   },
   default: {
+    fontFamily: AppFonts.sans,
     fontSize: 16,
     lineHeight: 24,
-    fontWeight: 500,
+    fontWeight: '400',
   },
   title: {
     fontSize: 48,

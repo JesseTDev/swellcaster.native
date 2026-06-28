@@ -7,8 +7,7 @@ import { StyleSheet } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ForecastCard } from '@/components/ui/forecast-card';
 import { OverviewBulletList } from '@/components/ui/overview-bullet-list';
-import { SectionHeader } from '@/components/ui/section-header';
-import { ForecastTypography } from '@/constants/forecast-theme';
+import { ForecastSpacing, ForecastTypography } from '@/constants/forecast-theme';
 import type { DayOverview } from '@/utils/day-overview';
 
 interface DayOverviewCardProps {
@@ -21,7 +20,6 @@ export function DayOverviewCard({ overview, testID }: DayOverviewCardProps) {
 
   return (
     <ForecastCard style={styles.card} testID={testID}>
-      <SectionHeader title="Today" subtitle="Overview" />
       <ThemedText style={styles.summary}>{overview.summary}</ThemedText>
       <OverviewBulletList
         items={overview.highlights}
@@ -33,10 +31,10 @@ export function DayOverviewCard({ overview, testID }: DayOverviewCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: 6,
+    marginBottom: ForecastSpacing.gutter,
   },
   summary: {
-    ...ForecastTypography.body,
-    lineHeight: 22,
+    ...ForecastTypography.bodyMd,
+    lineHeight: 24,
   },
 });

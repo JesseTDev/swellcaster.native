@@ -125,6 +125,7 @@ export function LocationForecastSections({
 
       <PrimaryConditionsCard
         surfHeightFt={surfHeight}
+        swellDirection={current.swell.direction}
         windDirection={current.wind.direction}
         windSpeedKnots={current.wind.speedKnots}
         windGustKnots={current.wind.gustKnots}
@@ -140,6 +141,7 @@ export function LocationForecastSections({
         <DailyHourlyPreview
           hourly={todayHourlySnapshots}
           anchors={todayAnchorSnapshots}
+          presentation="card"
           testID={`${testIDPrefix}-today-hourly-preview`}
         />
       ) : null}
@@ -165,8 +167,6 @@ export function LocationForecastSections({
       {hourlyFromNow.length > 0 ? (
         <TideChart
           data={hourlyFromNow}
-          lat={coords.lat}
-          lon={coords.lon}
           testID={`${testIDPrefix}-tide-chart`}
         />
       ) : null}
@@ -212,6 +212,7 @@ export function LocationForecastSections({
                   data={day}
                   dayHours={hoursForCard}
                   isToday={index === 0}
+                  surfContext={spotSurfContext}
                   testID={`${testIDPrefix}-daily-card-${index}`}
                 />
                 );

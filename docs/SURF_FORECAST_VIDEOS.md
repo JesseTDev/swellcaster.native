@@ -189,7 +189,7 @@ interface ConditionVideo {
 
 | Path | Role |
 | ---- | ---- |
-| `src/app/map.tsx` | Map screen: selection state, panel, record section |
+| `src/app/(tabs)/map.tsx` | Map screen: selection state, panel, record section |
 | `src/components/map/surf-map.tsx` | MapView, spot markers, film markers, tap handlers |
 | `src/components/map/video-map-marker.tsx` | Film icon UI |
 | `src/components/condition-video/record-condition-video-button.tsx` | Camera + upload |

@@ -5,10 +5,11 @@
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { DirectionArrow } from '@/components/ui/direction-arrow';
+import { ForecastCard } from '@/components/ui/forecast-card';
 import {
   ForecastColors,
   ForecastRadii,
+  ForecastSpacing,
   ForecastTypography,
   getForecastInsetStyle,
 } from '@/constants/forecast-theme';
@@ -20,14 +21,21 @@ import { formatDirection } from '@/utils/forecast';
 interface DailyHourlyPreviewProps {
   hourly: HourlySurfSnapshot[];
   anchors: AnchorSurfSnapshot[];
+  /** Card wrapper for home screen; inset for nested daily rows */
+  presentation?: 'card' | 'inset';
   testID?: string;
 }
 
-const STRIP_HEIGHT = 5;
-const BAR_MAX_HEIGHT = 22;
-const WIND_ARROW_SIZE = 13;
+const STRIP_HEIGHT = 8;
+const BAR_MAX_HEIGHT = 48;
+const BAR_WIDTH = 6;
 
-export function DailyHourlyPreview({ hourly, anchors, testID }: DailyHourlyPreviewProps) {
+export function DailyHourlyPreview({
+  hourly,
+  anchors,
+  presentation = 'inset',
+  testID,
+}: DailyHourlyPreviewProps) {
   const scheme = useColorScheme();
   const palette = ForecastColors[scheme];
 
@@ -35,15 +43,19 @@ export function DailyHourlyPreview({ hourly, anchors, testID }: DailyHourlyPrevi
 
   const peakFt = maxSurfFt(hourly);
 
-  return (
-    <View
-      style={[
-        styles.wrap,
-        getForecastInsetStyle(scheme),
-        { borderColor: palette.borderStrong, backgroundColor: palette.surface },
-      ]}
-      testID={testID}
-    >
+  const content = (
+    <>
+      {presentation === 'card' ? (
+        <View style={styles.cardHeader}>
+          <ThemedText themeColor="textSecondary" style={styles.sectionTitle}>
+            Hourly quality
+          </ThemedText>
+          <ThemedText themeColor="textSecondary" style={styles.dateLabel}>
+            {hourly[0]?.hourLabel ?? 'Today'}
+          </ThemedText>
+        </View>
+      ) : null}
+
       <View style={styles.stripBlock}>
         <View style={styles.strip} accessibilityLabel="Hourly surf quality through the day">
           {hourly.map((slot) => (
@@ -67,9 +79,15 @@ export function DailyHourlyPreview({ hourly, anchors, testID }: DailyHourlyPrevi
       </View>
 
       {anchors.length > 0 ? (
-        <View style={[styles.barsRow, { borderTopColor: palette.border }]}>
+        <View
+          style={[
+            styles.barsRow,
+            presentation === 'card' && styles.barsRowCard,
+            { borderTopColor: palette.outlineVariant },
+          ]}
+        >
           {anchors.map((anchor) => {
-            const barHeight = Math.max(3, (anchor.surfFt / peakFt) * BAR_MAX_HEIGHT);
+            const barHeight = Math.max(4, (anchor.surfFt / peakFt) * BAR_MAX_HEIGHT);
             const windKts = Math.round(anchor.windSpeedKnots);
             const windDir = formatDirection(anchor.windDirection);
 
@@ -79,47 +97,63 @@ export function DailyHourlyPreview({ hourly, anchors, testID }: DailyHourlyPrevi
                 style={styles.barCol}
                 accessibilityLabel={`${anchor.anchorLabel}, ${anchor.surfFt.toFixed(1)} feet surf, ${windDir} ${windKts} knot wind`}
               >
+                <View style={[styles.barTrack, { backgroundColor: `${palette.accent}33` }]}>
+                  <View
+                    style={[
+                      styles.barFill,
+                      { height: barHeight, backgroundColor: palette.accent },
+                    ]}
+                  />
+                </View>
                 <ThemedText themeColor="textSecondary" style={styles.microLabel}>
                   {anchor.anchorLabel.replace(' ', '')}
                 </ThemedText>
-                <View style={[styles.barTrack, { backgroundColor: palette.border }]}>
-                  <View
-                    style={[styles.barFill, { height: barHeight, backgroundColor: anchor.color }]}
-                  />
-                </View>
-                <View style={styles.barValueRow}>
-                  <ThemedText style={styles.barValue}>{anchor.surfFt.toFixed(1)}</ThemedText>
-                  <ThemedText themeColor="textSecondary" style={styles.barUnit}>
-                    ft
-                  </ThemedText>
-                </View>
-                <View style={styles.windBlock}>
-                  <DirectionArrow
-                    fromDegrees={anchor.windDirection}
-                    color="#EAB308"
-                    size={WIND_ARROW_SIZE}
-                    showLabel={false}
-                  />
-                  <ThemedText themeColor="textSecondary" style={styles.windDir}>
-                    {windDir}
-                  </ThemedText>
-                  <View style={styles.windSpeedRow}>
-                    <ThemedText style={styles.windSpeed}>{windKts}</ThemedText>
-                    <ThemedText themeColor="textSecondary" style={styles.windUnit}>
-                      kt
-                    </ThemedText>
-                  </View>
-                </View>
               </View>
             );
           })}
         </View>
       ) : null}
+    </>
+  );
+
+  if (presentation === 'card') {
+    return (
+      <ForecastCard style={styles.cardWrap} testID={testID}>
+        {content}
+      </ForecastCard>
+    );
+  }
+
+  return (
+    <View
+      style={[
+        styles.wrap,
+        getForecastInsetStyle(scheme),
+        { borderColor: palette.borderStrong, backgroundColor: palette.surfaceContainer },
+      ]}
+      testID={testID}
+    >
+      {content}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  cardWrap: {
+    marginBottom: ForecastSpacing.gutter,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    ...ForecastTypography.sectionTitle,
+  },
+  dateLabel: {
+    ...ForecastTypography.metric,
+  },
   wrap: {
     marginTop: 6,
     borderRadius: ForecastRadii.inner,
@@ -135,9 +169,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'stretch',
     height: STRIP_HEIGHT,
-    borderRadius: 3,
+    borderRadius: ForecastRadii.chip,
     overflow: 'hidden',
-    gap: 1,
+    gap: 0,
   },
   stripSegment: {
     flex: 1,
@@ -149,80 +183,36 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   microLabel: {
-    fontSize: 9,
-    lineHeight: 11,
-    letterSpacing: 0.2,
-    fontVariant: ['tabular-nums'],
+    ...ForecastTypography.microData,
+    opacity: 0.6,
   },
   barsRow: {
     flexDirection: 'row',
     borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: 5,
+    paddingTop: 16,
     paddingBottom: 4,
     paddingHorizontal: 2,
     gap: 0,
   },
+  barsRowCard: {
+    borderTopWidth: 0,
+    paddingTop: 8,
+  },
   barCol: {
     flex: 1,
     alignItems: 'center',
-    gap: 2,
+    gap: 8,
     paddingHorizontal: 1,
   },
   barTrack: {
-    width: '80%',
-    maxWidth: 22,
+    width: BAR_WIDTH,
     height: BAR_MAX_HEIGHT,
-    borderRadius: 3,
+    borderRadius: ForecastRadii.chip,
     justifyContent: 'flex-end',
     overflow: 'hidden',
   },
   barFill: {
     width: '100%',
-    borderRadius: 3,
-  },
-  barValueRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 2,
-  },
-  barValue: {
-    ...ForecastTypography.caption,
-    fontSize: 9,
-    lineHeight: 11,
-    fontWeight: '700',
-    fontVariant: ['tabular-nums'],
-  },
-  barUnit: {
-    fontSize: 8,
-    lineHeight: 10,
-    fontWeight: '500',
-  },
-  windBlock: {
-    alignItems: 'center',
-    gap: 0,
-    marginTop: 1,
-  },
-  windDir: {
-    fontSize: 8,
-    lineHeight: 10,
-    fontWeight: '600',
-    letterSpacing: 0.2,
-    marginTop: -1,
-  },
-  windSpeedRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 1,
-  },
-  windSpeed: {
-    fontSize: 8,
-    lineHeight: 10,
-    fontWeight: '600',
-    fontVariant: ['tabular-nums'],
-  },
-  windUnit: {
-    fontSize: 7,
-    lineHeight: 9,
-    fontWeight: '500',
+    borderRadius: ForecastRadii.chip,
   },
 });

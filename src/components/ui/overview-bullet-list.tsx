@@ -1,10 +1,11 @@
 /**
- * OverviewBulletList — compact bullet lines for forecast summaries
+ * OverviewBulletList — check-mark highlights for forecast summaries
  */
 
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { PlatformSymbol } from '@/components/ui/platform-symbol';
 import { ForecastColors, ForecastTypography } from '@/constants/forecast-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -23,7 +24,15 @@ export function OverviewBulletList({ items, testID }: OverviewBulletListProps) {
     <View style={styles.list} testID={testID}>
       {items.map((item) => (
         <View key={item} style={styles.row}>
-          <View style={[styles.bullet, { backgroundColor: palette.accent }]} />
+          <PlatformSymbol
+            name={{
+              ios: 'checkmark.circle.fill',
+              android: 'check-circle',
+              web: 'check-circle',
+            }}
+            size={16}
+            tintColor={palette.accent}
+          />
           <ThemedText themeColor="textSecondary" style={styles.text}>
             {item}
           </ThemedText>
@@ -35,23 +44,16 @@ export function OverviewBulletList({ items, testID }: OverviewBulletListProps) {
 
 const styles = StyleSheet.create({
   list: {
-    marginTop: 12,
+    marginTop: 16,
     gap: 8,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
-  },
-  bullet: {
-    width: 5,
-    height: 5,
-    borderRadius: 999,
-    marginTop: 7,
+    gap: 12,
   },
   text: {
-    ...ForecastTypography.caption,
+    ...ForecastTypography.body,
     flex: 1,
-    lineHeight: 18,
   },
 });

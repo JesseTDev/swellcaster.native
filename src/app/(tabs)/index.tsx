@@ -14,13 +14,14 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { UserAccountButton } from '@/components/auth';
 import { LocationForecastSections } from '@/components/forecast';
 import { LocationSearchBar } from '@/components/location-search-bar';
 import { Logo } from '@/components/logo';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { ThemeToggleButton } from '@/components/ui/theme-toggle-button';
-import { ForecastColors, ForecastRadii, ForecastTypography } from '@/constants/forecast-theme';
+import { ForecastColors, ForecastRadii, ForecastSpacing, ForecastTypography } from '@/constants/forecast-theme';
 import { type OutlookDays } from '@/constants/outlook-days';
 import { Spacing } from '@/constants/theme';
 import { useForecast } from '@/hooks/api';
@@ -192,14 +193,14 @@ export default function LandingPage() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.appBar}>
-          <Logo size={28} />
-          <View style={styles.brand}>
-            <ThemedText style={styles.brandName}>Swell Caster</ThemedText>
-            <ThemedText themeColor="textSecondary" style={styles.brandTag}>
-             Surf forecast
-            </ThemedText>
+          <Logo size={32} />
+          <ThemedText style={[styles.brandName, { color: palette.accent }]}>
+            Swell Caster
+          </ThemedText>
+          <View style={styles.appBarActions}>
+            <ThemeToggleButton />
+            <UserAccountButton />
           </View>
-          <ThemeToggleButton />
         </View>
 
         <LocationSearchBar testID="home-location-search" />
@@ -239,7 +240,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scroll: {
-    paddingHorizontal: Spacing.three,
+    paddingHorizontal: ForecastSpacing.containerMargin,
   },
   centered: {
     flex: 1,
@@ -250,19 +251,18 @@ const styles = StyleSheet.create({
   appBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: Spacing.three,
+    gap: 12,
+    marginBottom: ForecastSpacing.gutter,
   },
-  brand: {
-    flex: 1,
+  appBarActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginLeft: 'auto',
   },
   brandName: {
-    ...ForecastTypography.bodyBold,
-    letterSpacing: -0.2,
-  },
-  brandTag: {
-    ...ForecastTypography.label,
-    marginTop: 1,
+    ...ForecastTypography.headline,
+    flex: 1,
   },
   loader: {
     marginTop: Spacing.two,

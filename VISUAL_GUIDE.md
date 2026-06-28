@@ -388,11 +388,10 @@ Your beautiful surf forecast app is running with:
 1. **Test the app** - Make sure everything loads correctly
 2. **Customize colors** - Match your brand
 3. **Add more locations** - Build location selector
-4. **Add tide data** - When API supports it
-5. **Add weather** - Wind speed, temperature, etc.
-6. **Push notifications** - Alert users to good conditions
-7. **Save favorites** - Let users save spots
-8. **Share forecast** - Social sharing feature
+4. **Add weather** - Wind speed, temperature, etc.
+5. **Push notifications** - Alert users to good conditions
+6. **Save favorites** - Let users save spots
+7. **Share forecast** - Social sharing feature
 
 ---
 

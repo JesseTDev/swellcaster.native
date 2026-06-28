@@ -1,5 +1,5 @@
 /**
- * Tide helpers — sea level from Open-Meteo (sea_level_height_msl)
+ * Tide helpers — sea level from forecast API (sea_level_height_msl)
  */
 
 import type { ForecastHour } from '@/services/api/types';
@@ -17,6 +17,12 @@ export interface TideExtreme {
 
 export function formatTideHeightM(meters: number, decimals = 2): string {
   return `${meters.toFixed(decimals)} m`;
+}
+
+export function hasTideMeasurements(
+  values: Array<number | undefined | null>
+): boolean {
+  return values.some((v) => v != null && v !== 0);
 }
 
 export function findTideExtremes(

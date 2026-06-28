@@ -14,20 +14,20 @@ import { ForecastCard } from '@/components/ui/forecast-card';
 import { ForecastColors } from '@/constants/forecast-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import type { ForecastHour } from '@/services/api';
-import { estimateSurfHeightFtFromConditions, type SurfEstimateContext } from '@/utils/surf-height';
+import { estimateSurfHeightFtFromConditions, type SpotSurfContext } from '@/utils/surf-height';
 
 interface WaveHeightChartProps {
   data: ForecastHour[];
-  surfContext?: Pick<SurfEstimateContext, 'shoreBearing' | 'breakType'>;
+  surfContext?: SpotSurfContext;
   testID?: string;
 }
 
 function buildChartPoints(
   data: ForecastHour[],
-  surfContext?: Pick<SurfEstimateContext, 'shoreBearing' | 'breakType'>
+  surfContext?: SpotSurfContext
 ): ForecastLinePoint[] {
   return data.slice(0, 24).map((item, index) => {
-    const context: SurfEstimateContext | undefined = surfContext
+    const context = surfContext
       ? {
           ...surfContext,
           swellDirection: item.swell.direction,

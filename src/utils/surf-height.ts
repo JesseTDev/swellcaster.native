@@ -23,6 +23,8 @@ export interface SurfEstimateContext {
   windWaveHeight?: number;
 }
 
+export type SpotSurfContext = Pick<SurfEstimateContext, 'shoreBearing' | 'breakType'>;
+
 function angularDiff(a: number, b: number): number {
   const diff = Math.abs(a - b) % 360;
   return diff > 180 ? 360 - diff : diff;
@@ -203,8 +205,11 @@ export function formatSurfFtRangeFromValues(surfFtValues: number[]): string {
 }
 
 export function surfContextFromSpot(
-  spot?: Pick<{ shoreBearing?: number; breakType?: 'beach' | 'point' | 'reef' }, 'shoreBearing' | 'breakType'> | null
-): Pick<SurfEstimateContext, 'shoreBearing' | 'breakType'> | undefined {
+  spot?: Pick<
+    { shoreBearing?: number; breakType?: 'beach' | 'point' | 'reef' },
+    'shoreBearing' | 'breakType'
+  > | null
+): SpotSurfContext | undefined {
   if (!spot?.shoreBearing) return undefined;
   return {
     shoreBearing: spot.shoreBearing,
@@ -217,7 +222,7 @@ export function surfContextForHour(
     swell: { direction: number };
     windWave: { height: number };
   },
-  spotContext?: Pick<SurfEstimateContext, 'shoreBearing' | 'breakType'>
+  spotContext?: SpotSurfContext
 ): SurfEstimateContext | undefined {
   if (!spotContext?.shoreBearing) return undefined;
   return {

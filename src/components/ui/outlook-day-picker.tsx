@@ -14,7 +14,6 @@ import {
   ForecastColors,
   ForecastRadii,
   ForecastTypography,
-  getForecastInsetStyle,
 } from '@/constants/forecast-theme';
 import { Spacing } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -31,7 +30,7 @@ export function OutlookDayPicker({ value, onChange, testID }: OutlookDayPickerPr
 
   return (
     <View style={styles.container} testID={testID}>
-      <View style={[styles.segmented, getForecastInsetStyle(scheme)]}>
+      <View style={[styles.segmented, { backgroundColor: palette.surfaceContainerHigh }]}>
         {OUTLOOK_DAY_OPTIONS.map((days) => {
           const selected = value === days;
           return (
@@ -40,8 +39,7 @@ export function OutlookDayPicker({ value, onChange, testID }: OutlookDayPickerPr
               style={({ pressed }) => [
                 styles.segment,
                 selected && {
-                  backgroundColor: palette.accentSoft,
-                  borderColor: palette.accent,
+                  backgroundColor: palette.surfaceContainerHighest,
                 },
                 pressed && styles.pressed,
               ]}
@@ -53,10 +51,10 @@ export function OutlookDayPicker({ value, onChange, testID }: OutlookDayPickerPr
               <ThemedText
                 style={[
                   styles.segmentLabel,
-                  { color: selected ? palette.accent : palette.muted },
+                  { color: selected ? palette.accent : palette.onSurfaceVariant },
                 ]}
               >
-                {days}d
+                {days} days
               </ThemedText>
             </Pressable>
           );
@@ -77,18 +75,18 @@ const styles = StyleSheet.create({
   segmented: {
     flexDirection: 'row',
     padding: 4,
-    gap: 4,
+    borderRadius: ForecastRadii.inner,
+    gap: 0,
   },
   segment: {
     flex: 1,
     alignItems: 'center',
     paddingVertical: 8,
     borderRadius: ForecastRadii.inner - 2,
-    borderWidth: 1,
-    borderColor: 'transparent',
   },
   segmentLabel: {
-    ...ForecastTypography.bodyBold,
+    ...ForecastTypography.sectionTitle,
+    fontSize: 11,
   },
   pressed: {
     opacity: 0.7,

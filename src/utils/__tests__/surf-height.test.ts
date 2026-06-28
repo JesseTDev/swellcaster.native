@@ -4,6 +4,7 @@ import {
   formatSurfHeightRange,
   formatSurfHeightRangeFromConditions,
   pickSurfEstimateSource,
+  surfContextForHour,
   swellReachFactor,
 } from '@/utils/surf-height';
 
@@ -114,5 +115,25 @@ describe('surf-height', () => {
 
   it('estimates ~2.7 ft face from Margaret River swell sample', () => {
     expect(estimateSurfHeightFt(1.8, 9.6)).toBeCloseTo(2.72, 1);
+  });
+
+  it('surfContextForHour passes swell direction and wind wave into hourly estimates', () => {
+    const context = surfContextForHour(
+      {
+        swell: { direction: 270 },
+        windWave: { height: 0.2 },
+      },
+      {
+        shoreBearing: 270,
+        breakType: 'reef',
+      }
+    );
+
+    expect(context).toEqual({
+      shoreBearing: 270,
+      breakType: 'reef',
+      swellDirection: 270,
+      windWaveHeight: 0.2,
+    });
   });
 });

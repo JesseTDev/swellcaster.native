@@ -55,7 +55,9 @@
           "microphonePermission": "Swell Caster uses your microphone when recording spot conditions."
         }
       ],
-      "expo-video"
+      "expo-video",
+      "@clerk/expo",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

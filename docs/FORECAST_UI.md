@@ -6,10 +6,10 @@ How the native app presents surf conditions on the **home** screen, **map spot s
 
 ## Shared forecast block
 
-`LocationForecastSections` (`src/components/location-forecast-sections.tsx`) is used by:
+`LocationForecastSections` (`src/components/forecast/location-forecast-sections.tsx`) is used by:
 
-- **Home** (`src/app/index.tsx`) — GPS or searched location
-- **Map** (`src/app/map.tsx`) — tap a spot or map point
+- **Home** (`src/app/(tabs)/index.tsx`) — GPS or searched location
+- **Map** (`src/app/(tabs)/map.tsx`) — tap a spot or map point
 
 This keeps one layout for header, hero conditions, hourly preview, charts, and daily outlook.
 
@@ -23,33 +23,31 @@ This keeps one layout for header, hero conditions, hourly preview, charts, and d
 | ------- | ------ |
 | Place name + region | Reverse geocode or search label |
 | **Condition badge** | API `current.rating` (wind-aware); see ratings below |
-| **Water temp** | `current.waterTemperature` — label “Water temp” + °C |
-| **Tide** | `current.seaLevelHeightM` — label “Tide” + height in ft |
-| Timestamp | **Now · {time} local** from `current.timestamp` |
+| **Water temp** | `current.waterTemperature` — °C |
+| **Tide** | `current.seaLevelHeightM` — metres |
+| Timestamp | **Updated {time}** from `current.timestamp` |
 
 ---
 
 ## Primary conditions card
 
-Hero row with:
+Two-column hero row:
 
-- **Est. surf height** — range in ft from `formatSurfHeightRangeFromConditions`
-- **Wind** — direction arrow, compass label, speed in kt
-- **Gusts** — shown when API sends `wind.gustKnots` above sustained (e.g. `13 kt (gusts 18)`)
+- **Swell height** — range in ft from `formatSurfHeightRangeFromConditions`, swell direction when known
+- **Wind** — speed in kt, direction arrow (tertiary colour)
 
 ---
 
 ## Today’s hourly preview
 
-`DailyHourlyPreview` appears directly under the primary card for **today**:
+`DailyHourlyPreview` (card presentation on home) appears under the day overview for **today**:
 
 1. **Colour strip** — hourly surf quality (rating colour per hour), from **now** through end of day
 2. **Anchor bars** — wave height at 6 am, 9 am, 12 pm, 3 pm, 6 pm (only future anchors after current hour)
-3. Under each bar — **ft** label, small **wind arrow**, **compass** (e.g. SSE), **kt**
 
 Hourly data is sliced with `sliceHourlyFromNow(current.timestamp)` so past hours are not shown on the main view.
 
-Same preview appears in collapsed **extended outlook** day rows.
+The **inset** presentation (inside expanded daily outlook rows) keeps compact wind detail under each bar.
 
 ---
 
@@ -58,13 +56,15 @@ Same preview appears in collapsed **extended outlook** day rows.
 | Chart | Data slice | Notes |
 | ----- | ---------- | ----- |
 | **Wave height** | Next 24 h from now | Collapsible line chart, est. surf ft |
-| **Tide** | Next 24 h from now | API sea level or Open-Meteo fallback |
+| **Tide** | Next 24 h from now | API `seaLevelHeightM` only (same cached forecast) |
+
+If the API omits sea level for a location, the tide chart shows “Tide data unavailable”.
 
 ---
 
 ## Extended outlook
 
-Collapsible card with day picker (3 / 5 / 7 days). Each `DailyForecastCard`:
+Collapsible card with day picker (**7 / 14 / 16 days**). Each `DailyForecastCard`:
 
 - Collapsed: surf range, wind chip, hourly preview
 - Expanded: swell/wave/wind stats + 24 h scroll list
@@ -99,13 +99,15 @@ Native fallback mirrors API hard rules:
 
 | File | Role |
 | ---- | ---- |
-| `src/components/location-forecast-sections.tsx` | Shared forecast layout |
+| `src/components/forecast/location-forecast-sections.tsx` | Shared forecast layout |
 | `src/components/location-header.tsx` | Header + env stats |
 | `src/components/ui/primary-conditions-card.tsx` | Hero surf + wind |
-| `src/components/daily-hourly-preview.tsx` | Strip + anchor bars + wind |
-| `src/components/daily-forecast-card.tsx` | Outlook day rows |
+| `src/components/forecast/daily-hourly-preview.tsx` | Strip + anchor bars |
+| `src/components/forecast/daily-forecast-card.tsx` | Outlook day rows |
+| `src/components/charts/tide-chart.tsx` | Tide line chart (API data) |
 | `src/utils/daily-hourly-forecast.ts` | Hour grouping, anchors, `sliceHourlyFromNow` |
 | `src/utils/surf-height.ts` | Surf ft ranges and chart values |
+| `src/utils/tide.ts` | Tide extremes and formatting |
 | `src/utils/spot-quality.ts` | Client-side generic coastal rating |
 | `src/utils/forecast.ts` | Height-only fallback, colours, labels |
 
@@ -113,7 +115,6 @@ Native fallback mirrors API hard rules:
 
 ## Related docs
 
-- [Surf height](../SURF_HEIGHT.md) — ft bins and period factors
+- [Surf height](../SURF_HEIGHT.md) — ft bins, period factors, swell reach
 - [Quickstart](../QUICKSTART.md) — run API + app
-- [API forecast pipeline](../../SwellCaster.API/docs/FORECAST.md) — current/wind/cache
 - [API spot quality](../../SwellCaster.API/SPOT_QUALITY.md) — rating algorithm

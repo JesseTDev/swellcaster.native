@@ -1,10 +1,16 @@
 /**
- * ConditionBadge — surf rating pill (no emojis)
+ * ConditionBadge — surf rating pill (solid fill, Stitch style)
  */
 
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import {
+  ForecastColors,
+  ForecastRadii,
+  ForecastTypography,
+} from '@/constants/forecast-theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   formatRatingLabel,
   getRatingColor,
@@ -36,6 +42,8 @@ export function ConditionBadge({
   rating,
   compact = false,
 }: ConditionBadgeProps) {
+  const scheme = useColorScheme();
+  const palette = ForecastColors[scheme];
   const resolved =
     rating ??
     (swellDirection != null && windDirection != null && windSpeedKnots != null
@@ -52,11 +60,17 @@ export function ConditionBadge({
       style={[
         styles.badge,
         compact && styles.badgeCompact,
-        { backgroundColor: `${color}22`, borderColor: `${color}55` },
+        { backgroundColor: color },
       ]}
     >
-      <ThemedText style={[styles.text, compact && styles.textCompact, { color }]}>
-        {formatRatingLabel(resolved)}
+      <ThemedText
+        style={[
+          styles.text,
+          compact && styles.textCompact,
+          { color: palette.ratingText },
+        ]}
+      >
+        {formatRatingLabel(resolved).toUpperCase()}
       </ThemedText>
     </View>
   );
@@ -64,23 +78,20 @@ export function ConditionBadge({
 
 const styles = StyleSheet.create({
   badge: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
+    borderRadius: ForecastRadii.chip,
   },
   badgeCompact: {
-    paddingHorizontal: 7,
+    paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
   },
   text: {
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0.4,
+    ...ForecastTypography.label,
+    fontSize: 11,
   },
   textCompact: {
     fontSize: 10,
-    letterSpacing: 0.2,
+    letterSpacing: 0.6,
   },
 });

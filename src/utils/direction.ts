@@ -7,8 +7,3 @@
 export function directionToArrowRotation(fromDegrees: number): number {
   return ((fromDegrees % 360) + 360) % 360;
 }
-
-/** @deprecated Use directionToArrowRotation — swell/wind labels are "from" direction */
-export function directionToTravelRotation(fromDegrees: number): number {
-  return (fromDegrees + 180) % 360;
-}

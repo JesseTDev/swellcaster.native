@@ -9,15 +9,15 @@ import { DirectionArrow } from '@/components/ui/direction-arrow';
 import { ForecastCard } from '@/components/ui/forecast-card';
 import {
   ForecastColors,
+  ForecastSpacing,
   ForecastTypography,
-  getForecastInsetStyle,
 } from '@/constants/forecast-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { formatDirection } from '@/utils/forecast';
-import { formatWindSpeedKnots } from '@/utils/units';
 
 interface PrimaryConditionsCardProps {
   surfHeightFt: string;
+  swellDirection?: number;
   windDirection: number;
   windSpeedKnots: number;
   windGustKnots?: number | null;
@@ -26,49 +26,67 @@ interface PrimaryConditionsCardProps {
 
 export function PrimaryConditionsCard({
   surfHeightFt,
+  swellDirection,
   windDirection,
   windSpeedKnots,
-  windGustKnots,
   testID,
 }: PrimaryConditionsCardProps) {
   const scheme = useColorScheme();
   const palette = ForecastColors[scheme];
 
+  const windSpeedLabel = String(Math.round(windSpeedKnots));
+
   return (
-    <ForecastCard variant="featured" padded={false} style={styles.card} testID={testID}>
+    <ForecastCard variant="featured" testID={testID} style={styles.card}>
       <View style={styles.row}>
-        <View style={[getForecastInsetStyle(scheme), styles.surfInset]}>
-          <ThemedText themeColor="textSecondary" style={styles.surfLabel}>
-            Est. surf height
+        <View style={[styles.column, styles.columnBorder, { borderColor: `${palette.outlineVariant}4D` }]}>
+          <ThemedText themeColor="textSecondary" style={styles.metricLabel}>
+            Swell height
           </ThemedText>
-          <View style={styles.surfValueRow}>
-            <ThemedText style={[styles.surfValue, { color: palette.accent }]}>
-              {surfHeightFt}
-            </ThemedText>
-            <ThemedText themeColor="textSecondary" style={styles.surfUnit}>
+          <View style={styles.valueRow}>
+            <ThemedText style={[styles.value, { color: palette.onSurface }]}>{surfHeightFt}</ThemedText>
+            <ThemedText themeColor="textSecondary" style={styles.unit}>
               ft
             </ThemedText>
           </View>
+          {swellDirection != null ? (
+            <View style={styles.directionRow}>
+              <DirectionArrow
+                fromDegrees={swellDirection}
+                color={palette.secondary}
+                size={16}
+                showLabel={false}
+              />
+              <ThemedText style={[styles.directionText, { color: palette.secondary }]}>
+                {formatDirection(swellDirection).toUpperCase()} {Math.round(swellDirection)}°
+              </ThemedText>
+            </View>
+          ) : null}
         </View>
 
-        <View style={[styles.divider, { backgroundColor: palette.borderStrong }]} />
-
-        <View style={styles.windBlock}>
-          <ThemedText themeColor="textSecondary" style={styles.windLabel}>
+        <View style={styles.column}>
+          <ThemedText themeColor="textSecondary" style={styles.metricLabel}>
             Wind
           </ThemedText>
-          <DirectionArrow
-            fromDegrees={windDirection}
-            color="#EAB308"
-            size={26}
-            showLabel={false}
-          />
-          <ThemedText style={styles.windDirection}>
-            {formatDirection(windDirection)}
-          </ThemedText>
-          <ThemedText themeColor="textSecondary" style={styles.windSpeed}>
-            {formatWindSpeedKnots(windSpeedKnots, windGustKnots)}
-          </ThemedText>
+          <View style={styles.valueRow}>
+            <ThemedText style={[styles.value, { color: palette.onSurface }]}>
+              {windSpeedLabel || '—'}
+            </ThemedText>
+            <ThemedText themeColor="textSecondary" style={styles.unit}>
+              kt
+            </ThemedText>
+          </View>
+          <View style={styles.directionRow}>
+            <DirectionArrow
+              fromDegrees={windDirection}
+              color={palette.tertiary}
+              size={14}
+              showLabel={false}
+            />
+            <ThemedText style={[styles.directionText, { color: palette.tertiary }]}>
+              {formatDirection(windDirection).toUpperCase()}
+            </ThemedText>
+          </View>
         </View>
       </View>
     </ForecastCard>
@@ -77,62 +95,43 @@ export function PrimaryConditionsCard({
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: 6,
-    padding: 12,
+    marginBottom: ForecastSpacing.gutter,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'stretch',
-    gap: 12,
   },
-  surfInset: {
-    flex: 1.35,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    justifyContent: 'center',
+  column: {
+    flex: 1,
     gap: 4,
   },
-  surfLabel: {
-    ...ForecastTypography.sectionTitle,
-    fontWeight: '600',
+  columnBorder: {
+    borderRightWidth: 1,
+    paddingRight: ForecastSpacing.cardPadding,
+    marginRight: ForecastSpacing.cardPadding,
   },
-  surfValueRow: {
+  metricLabel: {
+    ...ForecastTypography.sectionTitle,
+  },
+  valueRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
     gap: 4,
   },
-  surfValue: {
-    fontSize: 28,
-    lineHeight: 32,
-    fontWeight: '700',
-    letterSpacing: -0.5,
-    fontVariant: ['tabular-nums'],
+  value: {
+    ...ForecastTypography.display,
   },
-  surfUnit: {
-    ...ForecastTypography.bodyBold,
-    fontWeight: '500',
+  unit: {
+    ...ForecastTypography.displayUnit,
   },
-  divider: {
-    width: StyleSheet.hairlineWidth,
-    alignSelf: 'stretch',
-  },
-  windBlock: {
-    flex: 1,
+  directionRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: 4,
-    paddingVertical: 4,
+    marginTop: 4,
   },
-  windLabel: {
-    ...ForecastTypography.sectionTitle,
-    fontWeight: '600',
-  },
-  windDirection: {
-    ...ForecastTypography.bodyBold,
-    fontVariant: ['tabular-nums'],
-  },
-  windSpeed: {
-    ...ForecastTypography.caption,
-    fontVariant: ['tabular-nums'],
+  directionText: {
+    ...ForecastTypography.metric,
+    letterSpacing: 0.4,
   },
 });

@@ -40,6 +40,7 @@ Open-Meteo (offshore grid point)
                 │
                 ▼
         estimateSurfHeightM = heightM × surfFactor(period)
+                × swellReachFactor (curated spots only)
                 │
                 ▼
         metersToFeet → estimated breaking face (ft)
@@ -92,7 +93,23 @@ breakingHeightM = inputHeightM × surfFactor(periodS, heightM)
 breakingHeightFt = breakingHeightM × 3.28084
 ```
 
-These factors were **calibrated to common foot bins**, not derived from bathymetry or a wave model.
+These factors were **calibrated to common foot bins**, not derived from a wave propagation model.
+
+For **curated spots**, `swellReachFactor()` scales offshore height when swell direction is misaligned with the break (`shoreBearing`, `breakType`). That is break geometry, not bathymetry — it does not use seabed depth data.
+
+---
+
+## Step 2b — Swell reach (curated spots only)
+
+When `shoreBearing` and swell direction are known, offshore energy is attenuated for sheltered points and reefs:
+
+| Break type | Misaligned swell (e.g. 60° off) | Effect |
+| ---------- | -------------------------------- | ------ |
+| Beach | Moderate offset | ~85% of open-coast estimate |
+| Reef | Moderate offset | ~50–65% |
+| Point | Moderate offset | ~32–52% (strongest shelter) |
+
+Generic locations (no curated spot match) skip this step — factor stays **1.0**.
 
 ---
 
@@ -122,9 +139,9 @@ There is no upper cap on the bin label — very large surf continues as `N-(N+1)
 
 | Location | Function | Notes |
 | -------- | -------- | ----- |
-| Home hero (`src/app/index.tsx`) | `formatSurfHeightRangeFromConditions(wave, swell)` | Large range next to location name |
-| Map spot sheet (`src/app/map.tsx`) | Same | Selected curated spot |
-| Daily cards (`src/components/daily-forecast-card.tsx`) | Same, using daily `maxHeight` / `maxPeriod` | One range per forecast day |
+| Home (`src/app/(tabs)/index.tsx`) | `formatSurfHeightRangeFromConditions(wave, swell, spotContext)` | Hero range + charts |
+| Map spot sheet (`src/app/(tabs)/map.tsx`) | Same | Selected curated spot |
+| Daily cards (`src/components/forecast/daily-forecast-card.tsx`) | Hourly-derived range when available | Extended outlook rows |
 | Wave height chart (`src/components/charts/wave-height-chart.tsx`) | `estimateSurfHeightFtFromConditions` | Hourly line chart in feet |
 
 All of these pass both `wave` and `swell` objects from the API response.
@@ -179,11 +196,11 @@ The native app **displays** `rating` from the API via `ConditionBadge`. It only 
 
 These estimates are **heuristic**, not a wave propagation model:
 
-- No bathymetry, sandbars, or reef shape  
-- No tide stage (tide data is shown separately)  
-- No local refraction or shadowing from headlands  
-- No separate primary / secondary swell stacking  
-- Same offshore grid point for all spots in an area  
+- No GEBCO bathymetry, shoaling, sandbars, or reef shape in surf height math
+- Tide (`seaLevelHeightM`) comes from the API forecast and is **shown separately** — it does not adjust surf height estimates
+- No local refraction or shadowing from headlands beyond swell-direction reach factors
+- No separate primary / secondary swell stacking
+- Same offshore grid point for all spots in an area
 
 Expect **±1 ft bin** variation on some days. The goal is consistent, explainable ranges aligned with how surfers read conditions.
 

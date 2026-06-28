@@ -1,5 +1,23 @@
 import '@testing-library/jest-native/extend-expect';
 
+process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ??= 'pk_test_mock';
+
+jest.mock('@clerk/expo', () => ({
+  ClerkProvider: ({ children }) => children,
+  useAuth: () => ({
+    isLoaded: true,
+    isSignedIn: false,
+    getToken: jest.fn(async () => null),
+    signOut: jest.fn(),
+  }),
+  useUser: () => ({
+    isLoaded: true,
+    isSignedIn: false,
+    user: null,
+  }),
+  useSSO: () => ({ startSSOFlow: jest.fn() }),
+}));
+
 // Mock axios globally
 jest.mock('axios', () => {
   const mockAxiosInstance = {
@@ -29,6 +47,7 @@ jest.mock('expo-router', () => ({
     push: jest.fn(),
     replace: jest.fn(),
     back: jest.fn(),
+    canGoBack: () => false,
   }),
   useLocalSearchParams: () => ({}),
   Link: 'Link',

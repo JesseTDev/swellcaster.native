@@ -1,10 +1,11 @@
 /**
- * ForecastCard — elevated surface for forecast sections
+ * ForecastCard — glass-style surface for forecast sections
  */
 
 import { StyleSheet, View, type ViewProps } from 'react-native';
 
 import {
+  ForecastSpacing,
   type ForecastCardVariant,
   getForecastCardStyle,
 } from '@/constants/forecast-theme';
@@ -41,6 +42,6 @@ export function ForecastCard({
 
 const styles = StyleSheet.create({
   padded: {
-    padding: 14,
+    padding: ForecastSpacing.cardPadding,
   },
 });

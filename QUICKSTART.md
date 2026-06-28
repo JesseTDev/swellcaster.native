@@ -141,7 +141,7 @@ swell-caster/
 └── SwellCaster.API/  ← .NET API (forecast, map spots, videos)
 ```
 
-The native app does **not** call Open-Meteo directly for forecasts (except tide chart fallback). All surf data goes through the API.
+The native app does **not** call Open-Meteo directly. All forecast data (wave, swell, wind, tide, water temp) goes through the API, which caches upstream responses.
 
 ---
 

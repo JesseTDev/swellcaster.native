@@ -1,35 +1,69 @@
 /**
- * Forecast UI tokens — shared across surf components
+ * Forecast UI tokens — Stitch M3 design system (React Native)
  */
 
-import { Platform, type ViewStyle } from 'react-native';
+import { type TextStyle, type ViewStyle } from 'react-native';
+
+import { AppFonts } from '@/constants/fonts';
+
+/** Stitch spacing tokens */
+export const ForecastSpacing = {
+  stackGap: 8,
+  gutter: 12,
+  containerMargin: 16,
+  cardPadding: 16,
+} as const;
 
 export const ForecastColors = {
   light: {
-    accent: '#0284C7',
+    accent: '#00668A',
+    accentBright: '#0284C7',
+    secondary: '#7C3AED',
+    tertiary: '#CA8A04',
+    onSurface: '#1A2332',
+    onSurfaceVariant: '#475569',
+    surface: '#EEF2FA',
+    surfaceContainer: '#FFFFFF',
+    surfaceContainerHigh: '#E2E8F4',
+    surfaceContainerHighest: '#CBD5E1',
+    surfaceDim: '#E8EEF8',
+    outline: '#94A3B8',
+    outlineVariant: '#CBD5E1',
     accentSoft: '#E0F2FE',
-    border: '#E2E8F0',
-    borderStrong: '#CBD5E1',
-    surface: '#F8FAFC',
-    surfaceElevated: '#FFFFFF',
+    border: 'rgba(0, 0, 0, 0.06)',
+    borderStrong: 'rgba(0, 0, 0, 0.1)',
+    surfaceElevated: 'rgba(255, 255, 255, 0.92)',
     muted: '#64748B',
-    success: '#059669',
-    warning: '#D97706',
+    success: '#16A34A',
+    warning: '#CA8A04',
     danger: '#DC2626',
     shadow: '#0F172A',
+    ratingText: '#0B1326',
   },
   dark: {
-    accent: '#38BDF8',
-    accentSoft: '#0C4A6E',
-    border: '#334155',
-    borderStrong: '#475569',
-    surface: '#0F172A',
-    surfaceElevated: '#1E293B',
-    muted: '#94A3B8',
-    success: '#34D399',
-    warning: '#FBBF24',
-    danger: '#F87171',
+    accent: '#8ED5FF',
+    accentBright: '#38BDF8',
+    secondary: '#DDB7FF',
+    tertiary: '#FDC425',
+    onSurface: '#DAE2FD',
+    onSurfaceVariant: '#BDC8D1',
+    surface: '#0B1326',
+    surfaceContainer: '#171F33',
+    surfaceContainerHigh: '#222A3D',
+    surfaceContainerHighest: '#2D3449',
+    surfaceDim: '#0B1326',
+    outline: '#87929A',
+    outlineVariant: '#3E484F',
+    accentSoft: '#171F33',
+    border: 'rgba(255, 255, 255, 0.05)',
+    borderStrong: 'rgba(255, 255, 255, 0.08)',
+    surfaceElevated: 'rgba(23, 31, 51, 0.85)',
+    muted: '#BDC8D1',
+    success: '#22C55E',
+    warning: '#EAB308',
+    danger: '#EF4444',
     shadow: '#000000',
+    ratingText: '#0B1326',
   },
 } as const;
 
@@ -37,75 +71,40 @@ export type ForecastTheme = typeof ForecastColors.light;
 export type ForecastColorScheme = keyof typeof ForecastColors;
 
 export const ForecastRadii = {
-  card: 14,
-  inner: 10,
+  card: 12,
+  inner: 8,
   chip: 999,
 } as const;
 
 export type ForecastCardVariant = 'default' | 'featured' | 'accent';
 
-/** Shared elevation + border for forecast surfaces */
+/** Glass-style elevated surface for forecast sections */
 export function getForecastCardStyle(
   scheme: ForecastColorScheme,
   variant: ForecastCardVariant = 'default'
 ): ViewStyle {
   const palette = ForecastColors[scheme];
 
-  const shadow: ViewStyle = Platform.select({
-    ios: {
-      shadowColor: palette.shadow,
-      shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: scheme === 'light' ? 0.08 : 0.35,
-      shadowRadius: 10,
-    },
-    android: {
-      elevation: scheme === 'light' ? 3 : 5,
-    },
-    default: {
-      boxShadow:
-        scheme === 'light'
-          ? '0 2px 12px rgba(15, 23, 42, 0.08)'
-          : '0 4px 16px rgba(0, 0, 0, 0.35)',
-    },
-  }) ?? {};
-
   const base: ViewStyle = {
     borderRadius: ForecastRadii.card,
     borderWidth: 1,
-    borderColor: palette.borderStrong,
+    borderColor: palette.border,
     backgroundColor: palette.surfaceElevated,
     overflow: 'hidden',
-    ...shadow,
   };
 
   if (variant === 'featured') {
     return {
       ...base,
-      borderColor: scheme === 'light' ? '#BAE6FD' : palette.borderStrong,
-      ...(Platform.select({
-        ios: {
-          shadowColor: palette.accent,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: scheme === 'light' ? 0.12 : 0.2,
-          shadowRadius: 14,
-        },
-        android: { elevation: 4 },
-        default: {
-          boxShadow:
-            scheme === 'light'
-              ? '0 4px 20px rgba(2, 132, 199, 0.12)'
-              : '0 4px 20px rgba(56, 189, 248, 0.15)',
-        },
-      }) ?? {}),
+      borderColor: scheme === 'light' ? palette.accentBright : palette.border,
     };
   }
 
   if (variant === 'accent') {
     return {
       ...base,
-      backgroundColor: palette.accentSoft,
-      borderColor: palette.accent,
-      borderWidth: 1.5,
+      backgroundColor: palette.surfaceContainer,
+      borderColor: palette.outlineVariant,
     };
   }
 
@@ -116,23 +115,115 @@ export function getForecastCardStyle(
 export function getForecastInsetStyle(scheme: ForecastColorScheme): ViewStyle {
   const palette = ForecastColors[scheme];
   return {
-    borderRadius: ForecastRadii.inner,
+    borderRadius: ForecastRadii.inner + 4,
     borderWidth: 1,
-    borderColor: palette.borderStrong,
-    backgroundColor: palette.surface,
+    borderColor: `${palette.outlineVariant}4D`,
+    backgroundColor: palette.surfaceContainer,
   };
 }
 
-/** Compact typography scale for forecast UI */
+const sans = AppFonts.sans;
+const sansSemiBold = AppFonts.sansSemiBold;
+const sansBold = AppFonts.sansBold;
+const sansExtraBold = AppFonts.sansExtraBold;
+const mono = AppFonts.mono;
+const monoSemiBold = AppFonts.monoSemiBold;
+
+/** Stitch typography scale */
 export const ForecastTypography = {
-  caption: { fontSize: 10, lineHeight: 14, letterSpacing: 0.3 },
-  label: { fontSize: 10, lineHeight: 14, letterSpacing: 0.5, textTransform: 'uppercase' as const },
-  body: { fontSize: 13, lineHeight: 18 },
-  bodyBold: { fontSize: 13, lineHeight: 18, fontWeight: '600' as const },
-  metric: { fontSize: 15, lineHeight: 20, fontWeight: '600' as const },
-  metricLg: { fontSize: 18, lineHeight: 22, fontWeight: '700' as const },
-  display: { fontSize: 36, lineHeight: 40, fontWeight: '700' as const, letterSpacing: -1 },
-  displayUnit: { fontSize: 16, lineHeight: 20, fontWeight: '500' as const },
-  sectionTitle: { fontSize: 11, lineHeight: 14, letterSpacing: 0.6, textTransform: 'uppercase' as const, fontWeight: '700' as const },
-  placeName: { fontSize: 20, lineHeight: 24, fontWeight: '700' as const, letterSpacing: -0.3 },
+  caption: {
+    fontFamily: sans,
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: '500',
+  } satisfies TextStyle,
+  label: {
+    fontFamily: sansExtraBold,
+    fontSize: 11,
+    lineHeight: 16,
+    letterSpacing: 0.88,
+    textTransform: 'uppercase' as const,
+    fontWeight: '700',
+  } satisfies TextStyle,
+  body: {
+    fontFamily: sans,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '400',
+  } satisfies TextStyle,
+  bodyMd: {
+    fontFamily: sans,
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '400',
+  } satisfies TextStyle,
+  bodyBold: {
+    fontFamily: sansSemiBold,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '600',
+  } satisfies TextStyle,
+  metric: {
+    fontFamily: monoSemiBold,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '600',
+    fontVariant: ['tabular-nums'],
+  } satisfies TextStyle,
+  metricLg: {
+    fontFamily: monoSemiBold,
+    fontSize: 20,
+    lineHeight: 24,
+    fontWeight: '600',
+    fontVariant: ['tabular-nums'],
+  } satisfies TextStyle,
+  display: {
+    fontFamily: sansExtraBold,
+    fontSize: 36,
+    lineHeight: 44,
+    fontWeight: '800',
+    letterSpacing: -0.72,
+    fontVariant: ['tabular-nums'],
+  } satisfies TextStyle,
+  displayLg: {
+    fontFamily: sansBold,
+    fontSize: 28,
+    lineHeight: 34,
+    fontWeight: '700',
+    letterSpacing: -0.28,
+  } satisfies TextStyle,
+  displayUnit: {
+    fontFamily: sansBold,
+    fontSize: 20,
+    lineHeight: 28,
+    fontWeight: '600',
+  } satisfies TextStyle,
+  sectionTitle: {
+    fontFamily: sansExtraBold,
+    fontSize: 11,
+    lineHeight: 16,
+    letterSpacing: 0.88,
+    textTransform: 'uppercase' as const,
+    fontWeight: '700',
+  } satisfies TextStyle,
+  placeName: {
+    fontFamily: sansBold,
+    fontSize: 28,
+    lineHeight: 34,
+    fontWeight: '700',
+    letterSpacing: -0.28,
+  } satisfies TextStyle,
+  microData: {
+    fontFamily: mono,
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: '500',
+    fontVariant: ['tabular-nums'],
+  } satisfies TextStyle,
+  headline: {
+    fontFamily: sansSemiBold,
+    fontSize: 20,
+    lineHeight: 28,
+    fontWeight: '600',
+  } satisfies TextStyle,
 } as const;

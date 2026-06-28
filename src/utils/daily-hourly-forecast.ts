@@ -1,6 +1,6 @@
 import type { ForecastHour, SurfRating } from '@/services/api/types';
 import { getRatingColor, getSurfRating } from '@/utils/forecast';
-import { rateGenericCoastal } from '@/utils/spot-quality';
+import { rateCoastal } from '@/utils/spot-quality';
 import { estimateSurfHeightFtFromConditions, type SurfEstimateContext } from '@/utils/surf-height';
 
 export interface HourlySurfSnapshot {
@@ -111,7 +111,11 @@ export function buildHourlySnapshot(
   const periodS = hour.swell.period ?? hour.wave.period ?? 8;
   const rating =
     hour.swell.direction > 0
-      ? rateGenericCoastal(hour.wave, hour.swell, hour.wind)
+      ? rateCoastal(hour.wave, hour.swell, hour.wind, {
+          shoreBearing: surfContext?.shoreBearing,
+          breakType: surfContext?.breakType,
+          windWaveHeight: hour.windWave.height,
+        })
       : getSurfRating(hour.swell.height, periodS);
 
   return {

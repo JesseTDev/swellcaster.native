@@ -4,6 +4,9 @@
  */
 
 import axios, { AxiosError, AxiosInstance } from 'axios';
+
+import { getAuthToken } from '@/services/auth/auth-token';
+
 import { API_CONFIG } from './config';
 
 class ApiClient {
@@ -24,13 +27,12 @@ class ApiClient {
   private setupInterceptors() {
     // Request interceptor
     this.instance.interceptors.request.use(
-      (config) => {
-        // Add auth token if needed
-        // const token = getAuthToken();
-        // if (token) {
-        //   config.headers.Authorization = `Bearer ${token}`;
-        // }
-        
+      async (config) => {
+        const token = await getAuthToken();
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+
         if (__DEV__) {
           console.log('API Request:', config.method?.toUpperCase(), config.url);
         }

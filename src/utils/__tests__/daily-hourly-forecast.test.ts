@@ -8,6 +8,11 @@ import {
   sliceHourlyFromNow,
   toForecastDayKey,
 } from '@/utils/daily-hourly-forecast';
+import {
+  estimateSurfHeightFtFromConditions,
+  formatSurfFtRangeFromValues,
+  surfContextForHour,
+} from '@/utils/surf-height';
 
 function sampleHour(isoLocal: string): ForecastHour {
   const h = new Date(isoLocal).getHours();
@@ -69,5 +74,35 @@ describe('daily-hourly-forecast', () => {
     const snapshots = buildHourlySnapshots(hours);
     const anchors = pickAnchorSnapshots(snapshots, 12);
     expect(anchors.map((anchor) => anchor.anchorLabel)).toEqual(['12 pm', '3 pm', '6 pm']);
+  });
+
+  it('derives outlook surf from the same per-hour math as the top reading', () => {
+    const spotContext = { shoreBearing: 90, breakType: 'point' as const };
+    const snapshots = buildHourlySnapshots(hours, spotContext);
+
+    // Each snapshot must equal the headline estimate for that exact hour, so the
+    // extended outlook can never disagree with the top reading / chart.
+    const first = hours[0];
+    const topFt = estimateSurfHeightFtFromConditions(
+      first.wave,
+      first.swell,
+      surfContextForHour(first, spotContext)
+    );
+    expect(snapshots[0].surfFt).toBeCloseTo(topFt, 5);
+
+    const range = formatSurfFtRangeFromValues(snapshots.map((s) => s.surfFt));
+    expect(range).toMatch(/ft$/);
+  });
+
+  it('attenuates a sheltered point relative to a generic estimate', () => {
+    const withSpot = buildHourlySnapshots(hours, {
+      shoreBearing: 90,
+      breakType: 'point',
+    });
+    const generic = buildHourlySnapshots(hours);
+
+    // Swell here arrives from 90° (aligned), so a point should not exceed the
+    // generic exposed estimate.
+    expect(withSpot[0].surfFt).toBeLessThanOrEqual(generic[0].surfFt + 1e-9);
   });
 });

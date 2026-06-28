@@ -11,7 +11,8 @@ import { DirectionArrow } from '@/components/ui/direction-arrow';
 import { CollapsibleForecastCard } from '@/components/ui/collapsible-forecast-card';
 import { StatRow } from '@/components/ui/stat-row';
 import { ThemedText } from '@/components/themed-text';
-import { ForecastTypography } from '@/constants/forecast-theme';
+import { ForecastColors, ForecastTypography } from '@/constants/forecast-theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { formatDirection, formatDirectionFull } from '@/utils/forecast';
@@ -38,6 +39,9 @@ function DirectionContent({
   windSpeedKnots,
   windSeaHeightM,
 }: Omit<DirectionCardProps, 'embedded' | 'defaultExpanded' | 'testID'>) {
+  const scheme = useColorScheme();
+  const palette = ForecastColors[scheme];
+
   return (
     <>
       <View style={styles.row}>
@@ -45,14 +49,14 @@ function DirectionContent({
           <ThemedText themeColor="textSecondary" style={styles.arrowLabel}>
             Swell
           </ThemedText>
-          <DirectionArrow fromDegrees={swellDirection} color="#A855F7" size={32} />
+          <DirectionArrow fromDegrees={swellDirection} color={palette.secondary} size={32} />
         </View>
         <View style={styles.divider} />
         <View style={styles.item}>
           <ThemedText themeColor="textSecondary" style={styles.arrowLabel}>
             Wind
           </ThemedText>
-          <DirectionArrow fromDegrees={windDirection} color="#EAB308" size={32} />
+          <DirectionArrow fromDegrees={windDirection} color={palette.tertiary} size={32} />
         </View>
       </View>
 

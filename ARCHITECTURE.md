@@ -26,8 +26,8 @@ Native-specific layers and conventions. For the **full system** (API connection,
 native/src/
 ├── app/
 │   ├── _layout.tsx          # QueryProvider + ThemeProvider + AppTabs
-│   ├── index.tsx            # Home — GPS/search forecast
-│   └── map.tsx              # Map — spot markers, video, forecast panel
+│   ├── index.tsx            # Home — GPS/search forecast (tabs)
+│   └── map.tsx              # Map — spot markers, video, forecast panel (tabs)
 │
 ├── services/
 │   ├── api/                 # Backend integration
@@ -36,8 +36,6 @@ native/src/
 │   │   ├── endpoints.ts     # swellApi, videosApi
 │   │   ├── normalize.ts     # Response normalization
 │   │   └── types.ts         # Types matching C# models
-│   └── tide/
-│       └── open-meteo-tide.ts   # Direct Open-Meteo (tide fallback)
 │
 ├── hooks/
 │   ├── api/                 # TanStack Query hooks
@@ -64,9 +62,10 @@ native/src/
 │   ├── selected-location-store.ts   # Manual location override
 │   └── recent-location-search-store.ts
 │
-└── utils/
-    ├── surf-height.ts       # Display conversions
-    ├── forecast.ts          # Rating colors, labels
+    └── utils/
+        ├── surf-height.ts       # Display conversions + swell reach
+        ├── tide.ts              # Tide chart helpers (API sea level)
+        ├── forecast.ts          # Rating colors, labels
     ├── day-overview.ts      # Outlook bullet generation
     ├── daily-hourly-forecast.ts
     └── coordinates.ts       # Curated spot matching
@@ -101,14 +100,14 @@ Screens never call axios directly — always go through hooks → `swellApi` / `
 
 ## Screens
 
-### Home (`app/index.tsx`)
+### Home (`app/(tabs)/index.tsx`)
 
 1. Resolve location: Zustand manual coords **or** `useDeviceLocation` GPS
 2. Match coords to curated spot name via `useCuratedSpots`
 3. Fetch `useForecast({ lat, lon, days })`
 4. Render `LocationForecastSections` — primary conditions, charts, daily/hourly outlook
 
-### Map (`app/map.tsx`)
+### Map (`app/(tabs)/map.tsx`)
 
 1. Load all spot markers via `useMapSpotMarkers` (conditions + spot metadata)
 2. Load active video pins via condition video hooks

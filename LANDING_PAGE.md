@@ -237,8 +237,7 @@ color: (opacity = 1) => `rgba(37, 99, 235, ${opacity})`  // Blue
 1. **Test the app** - Make sure your API is running
 2. **Customize colors** - Update theme if needed
 3. **Add more locations** - Create location selector
-4. **Add tide data** - When API supports it
-5. **Add notifications** - Alert users to good conditions
+4. **Add notifications** - Alert users to good conditions
 
 ### 🎉 You're Ready!
 

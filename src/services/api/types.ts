@@ -127,7 +127,6 @@ export interface CuratedSpot {
   aliases?: string[];
   /** Compass bearing the break faces toward open ocean (degrees). */
   shoreBearing?: number;
-  swellToleranceDeg?: number;
   breakType?: 'beach' | 'point' | 'reef';
 }
 
