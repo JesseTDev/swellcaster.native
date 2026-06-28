@@ -44,6 +44,7 @@ From this folder (`native/`):
 
 ```bash
 npm install   # first time only
+cp .env.example .env   # if present — set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
 npm run start:phone
 ```
 
@@ -142,6 +143,16 @@ swell-caster/
 ```
 
 The native app does **not** call Open-Meteo directly. All forecast data (wave, swell, wind, tide, water temp) goes through the API, which caches upstream responses.
+
+### Clerk auth (optional)
+
+Sign-in uses Clerk. Add to `native/.env` (gitignored):
+
+```bash
+EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+```
+
+The app runs without signing in; API requests omit the bearer token until the user authenticates.
 
 ---
 

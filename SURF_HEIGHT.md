@@ -150,7 +150,7 @@ All of these pass both `wave` and `swell` objects from the API response.
 
 ## Spot quality rating (API)
 
-For **curated spots** (breaks in `curated-spots.json` with `shoreBearing`), the API attaches a `rating` field. That rating uses the **same estimated surf height** as above, then applies break-specific rules:
+For **curated spots** (breaks in `SwellCaster.API/Data/curated-spots-australia.json` and `curated-spots-international.json` with `shoreBearing`), the API attaches a `rating` field. That rating uses the **same estimated surf height** as above, then applies break-specific rules:
 
 | Factor | Weight | Role |
 | ------ | ------ | ---- |

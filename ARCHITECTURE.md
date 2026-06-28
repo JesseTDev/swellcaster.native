@@ -1,8 +1,6 @@
 # Swell Caster Native — App Architecture
 
-Native-specific layers and conventions. For the **full system** (API connection, data flows, external services, and diagrams), see the monorepo doc:
-
-**→ [../ARCHITECTURE.md](../ARCHITECTURE.md)**
+Native-specific layers and conventions. For API behaviour, spot ratings, and database design, see **SwellCaster.API** docs (`../SwellCaster.API/docs/README.md`).
 
 ---
 
@@ -10,8 +8,9 @@ Native-specific layers and conventions. For the **full system** (API connection,
 
 | Layer | Technology |
 | ----- | ---------- |
-| Framework | Expo SDK 56, React Native, Expo Router (native tabs) |
+| Framework | Expo SDK 54, React Native, Expo Router (native tabs) |
 | Language | TypeScript |
+| Auth | Clerk (`@clerk/expo`) — optional sign-in, bearer token on API requests |
 | Server state | TanStack Query v5 |
 | Client state | Zustand (`selected-location-store`, `theme-store`) |
 | HTTP | Axios via `services/api/client.ts` |
@@ -25,24 +24,30 @@ Native-specific layers and conventions. For the **full system** (API connection,
 ```text
 native/src/
 ├── app/
-│   ├── _layout.tsx          # QueryProvider + ThemeProvider + AppTabs
-│   ├── index.tsx            # Home — GPS/search forecast (tabs)
-│   └── map.tsx              # Map — spot markers, video, forecast panel (tabs)
+│   ├── _layout.tsx              # ClerkProvider, fonts, QueryProvider, root stack
+│   ├── sign-in.tsx              # OAuth sign-in screen
+│   └── (tabs)/
+│       ├── _layout.tsx          # Native tab bar (Home / Map)
+│       ├── index.tsx            # Home — GPS/search forecast
+│       └── map.tsx              # Map — spot markers, video, forecast panel
 │
 ├── services/
-│   ├── api/                 # Backend integration
-│   │   ├── config.ts        # Base URL (Metro proxy on device)
-│   │   ├── client.ts        # Axios singleton
-│   │   ├── endpoints.ts     # swellApi, videosApi
-│   │   ├── normalize.ts     # Response normalization
-│   │   └── types.ts         # Types matching C# models
+│   ├── api/                     # Backend integration
+│   │   ├── config.ts            # Base URL (Metro proxy on device)
+│   │   ├── client.ts            # Axios + Clerk bearer token
+│   │   ├── endpoints.ts         # swellApi, videosApi
+│   │   ├── normalize.ts         # Response normalization
+│   │   └── types.ts             # Types matching C# models
+│   └── auth/
+│       └── auth-token.ts        # Clerk token getter registration
+│
+├── providers/
+│   ├── query-provider.tsx       # TanStack Query defaults
+│   └── auth-token-sync.tsx      # Registers Clerk getToken with API client
 │
 ├── hooks/
-│   ├── api/                 # TanStack Query hooks
-│   │   ├── use-forecast.ts
-│   │   ├── use-current.ts
-│   │   ├── use-hourly.ts
-│   │   ├── use-daily.ts
+│   ├── api/
+│   │   ├── use-forecast.ts      # Full forecast (current + hourly + daily)
 │   │   └── use-condition-videos.ts
 │   ├── use-curated-spots.ts
 │   ├── use-curated-spot-conditions.ts
@@ -51,24 +56,25 @@ native/src/
 │   └── use-day-overview.ts
 │
 ├── components/
-│   ├── forecast/            # Daily cards, hourly detail, location sections
-│   ├── charts/              # Wave height, tide, line charts
-│   ├── map/                 # SurfMap, markers, selection pin
-│   ├── condition-video/     # Record + player
-│   ├── surf/                # WaveCard, CurrentConditions
-│   └── ui/                  # Shared forecast UI primitives
+│   ├── forecast/                # Daily cards, hourly detail, location sections
+│   ├── charts/                  # Wave height, tide, line charts
+│   ├── map/                     # SurfMap, markers, selection pin
+│   ├── condition-video/         # Record + player
+│   ├── auth/                    # User account button
+│   └── ui/                      # Shared forecast UI primitives
 │
 ├── stores/
-│   ├── selected-location-store.ts   # Manual location override
+│   ├── selected-location-store.ts
 │   └── recent-location-search-store.ts
 │
-    └── utils/
-        ├── surf-height.ts       # Display conversions + swell reach
-        ├── tide.ts              # Tide chart helpers (API sea level)
-        ├── forecast.ts          # Rating colors, labels
-    ├── day-overview.ts      # Outlook bullet generation
+└── utils/
+    ├── surf-height.ts           # Display conversions + swell reach
+    ├── tide.ts                  # Tide chart helpers (API sea level)
+    ├── spot-quality.ts          # Generic coastal rating fallback
+    ├── forecast.ts              # Rating colors, labels
+    ├── day-overview.ts          # Outlook bullet generation
     ├── daily-hourly-forecast.ts
-    └── coordinates.ts       # Curated spot matching
+    └── coordinates.ts           # Curated spot matching
 ```
 
 ---
@@ -77,7 +83,7 @@ native/src/
 
 ```mermaid
 flowchart LR
-    Screen["Screen<br/>(index / map)"]
+    Screen["Screen<br/>(tabs/index / tabs/map)"]
     Hook["hooks/api/*"]
     API["services/api/endpoints"]
     Axios["client.ts"]
@@ -95,6 +101,8 @@ flowchart LR
 ```
 
 Screens never call axios directly — always go through hooks → `swellApi` / `videosApi`.
+
+The native app does **not** call Open-Meteo or any third-party surf forecast service directly. All marine data comes from SwellCaster.API.
 
 ---
 
@@ -121,13 +129,12 @@ Screens never call axios directly — always go through hooks → `swellApi` / `
 | Hook | Endpoint | Stale time |
 | ---- | -------- | ---------- |
 | `useForecast` | `/api/swell/forecast` | 15 min |
-| `useCurrent` | `/api/swell/current` | 5 min |
-| `useHourly` | `/api/swell/hourly` | 5 min |
-| `useDaily` | `/api/swell/daily` | 5 min |
 | `useCuratedSpotConditions` | `/api/places/spots/conditions` | 15 min |
 | `useCuratedSpots` | `/api/places/spots` | 30 min |
 | `useConditionVideoAt` | `/api/videos/at` | 5 min |
 | `useActiveConditionVideos` | `/api/videos/active` | 5 min |
+
+Lower-level `/api/swell/current`, `/hourly`, and `/daily` exist on the API but the app uses the combined forecast endpoint only.
 
 Query client defaults (`providers/query-provider.tsx`): 5 min stale, 15 min GC, 1 retry, no refetch on focus.
 
@@ -145,12 +152,16 @@ Resolved in `services/api/config.ts`:
 
 Proxy implementation: `metro.config.js` at project root.
 
+### Auth env
+
+Clerk requires `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` in `native/.env` (gitignored). See root layout error message if missing.
+
 ---
 
 ## Testing
 
 ```bash
-npm test                  # Jest — utils, API endpoints, hooks
+npm test                  # Jest — utils, API endpoints
 npm test -- --coverage
 ```
 
@@ -165,8 +176,8 @@ Tests mock axios at the API boundary. Key suites:
 
 | Doc | Topic |
 | --- | ----- |
-| [../ARCHITECTURE.md](../ARCHITECTURE.md) | Full system architecture |
 | [QUICKSTART.md](./QUICKSTART.md) | Run API + app locally |
 | [docs/FORECAST_UI.md](./docs/FORECAST_UI.md) | Forecast screen components |
 | [docs/SURF_FORECAST_VIDEOS.md](./docs/SURF_FORECAST_VIDEOS.md) | Video recording UX |
 | [SURF_HEIGHT.md](./SURF_HEIGHT.md) | Surf height display logic |
+| [../SwellCaster.API/docs/README.md](../SwellCaster.API/docs/README.md) | API docs index |

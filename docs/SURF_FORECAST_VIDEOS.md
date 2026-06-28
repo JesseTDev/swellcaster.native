@@ -202,7 +202,7 @@ interface ConditionVideo {
 
 - **Film icons:** `useActiveConditionVideos()` — refetches every 5 minutes; invalidated after upload.
 - **Panel video:** `useConditionVideoAt(selectedCoords)` when a film icon is selected.
-- **Panel conditions:** `useCurrent(selectedCoords)` or curated spot conditions from `useMapSpotMarkers`.
+- **Panel conditions:** `useForecast(selectedCoords)` or cached conditions from `useMapSpotMarkers`.
 
 ### Selection state (`map.tsx`)
 

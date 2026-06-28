@@ -9,33 +9,29 @@ A React Native application built with Expo for viewing surf conditions and forec
 - **Data Fetching**: TanStack Query (React Query) for efficient server state management
 - **Reusable Components**: Modular, testable component architecture
 - **Testing**: Jest and React Native Testing Library configured
-- **Modern Expo**: Built with Expo SDK 56 and React 19
+- **Modern Expo**: Built with Expo SDK 54 and React 19
 
 ## Project Structure
 
 ```
 src/
-├── app/                    # Expo Router pages
+├── app/                    # Expo Router pages (tabs: home + map, sign-in)
 ├── components/             # Reusable UI components
-│   ├── surf/              # Surf-specific components
-│   │   ├── wave-card.tsx
-│   │   └── current-conditions.tsx
-│   └── ...
+│   ├── forecast/          # Shared forecast sections, daily/hourly cards
+│   ├── charts/            # Wave height, tide charts
+│   ├── map/               # Surf map and markers
+│   ├── condition-video/   # Record + play crowdsourced clips
+│   ├── auth/              # Clerk account button
+│   └── ui/                # Forecast cards, badges, pickers
 ├── hooks/                  # Custom hooks
 │   └── api/               # TanStack Query hooks
 │       ├── use-forecast.ts
-│       ├── use-current.ts
-│       ├── use-hourly.ts
-│       └── use-daily.ts
+│       └── use-condition-videos.ts
 ├── services/               # External services
-│   └── api/               # API client and types
-│       ├── types.ts       # TypeScript types
-│       ├── config.ts      # API configuration
-│       ├── client.ts      # Axios instance
-│       └── endpoints.ts   # API endpoints
-├── providers/              # React context providers
-│   └── query-provider.tsx # TanStack Query provider
-└── constants/              # App constants
+│   ├── api/               # API client and types
+│   └── auth/              # Clerk token bridge
+├── providers/              # QueryProvider, AuthTokenSync
+└── constants/              # Theme, fonts, spacing
 ```
 
 ## Getting Started
@@ -70,28 +66,27 @@ Dev API URL is chosen automatically in `src/services/api/config.ts` (Metro proxy
 
 ### Available Endpoints
 
-The app integrates with the following API endpoints:
+The app integrates with the SwellCaster.API backend. The primary hook is `useForecast`, which calls the combined forecast endpoint:
 
-- `GET /api/swell/forecast?lat={lat}&lon={lon}` - Full forecast
-- `GET /api/swell/current?lat={lat}&lon={lon}` - Current conditions
-- `GET /api/swell/hourly?lat={lat}&lon={lon}&hours={hours}` - Hourly forecast
-- `GET /api/swell/daily?lat={lat}&lon={lon}` - Daily summary
+- `GET /api/swell/forecast?lat={lat}&lon={lon}&days={days}` — current, hourly, and daily in one response
+
+The API also exposes `/api/swell/current`, `/hourly`, and `/daily` separately; the native app uses the combined endpoint only.
 
 ### Usage Example
 
 ```typescript
-import { useCurrent } from '@/hooks/api';
+import { useForecast } from '@/hooks/api';
 
 function MyComponent() {
-  const { data, isLoading, error } = useCurrent({
-    lat: -33.8568,
-    lon: 151.2153,
-  });
+  const { data, isLoading, error } = useForecast(
+    { lat: -33.8568, lon: 151.2153, days: 7 },
+    { enabled: true }
+  );
 
   if (isLoading) return <Text>Loading...</Text>;
   if (error) return <Text>Error: {error.message}</Text>;
 
-  return <CurrentConditions data={data} />;
+  return <Text>{data?.current.swell.height} m swell</Text>;
 }
 ```
 
@@ -116,17 +111,11 @@ npm test -- --coverage  # Generate coverage report
 
 ```typescript
 import { render, screen } from '@testing-library/react-native';
-import { WaveCard } from '@/components/surf/wave-card';
+import { ConditionBadge } from '@/components/ui/condition-badge';
 
-test('renders wave data', () => {
-  render(
-    <WaveCard 
-      title="Wave" 
-      data={{ height: 1.5, direction: 180, period: 10 }}
-    />
-  );
-  
-  expect(screen.getByText('1.5m')).toBeTruthy();
+test('renders rating label', () => {
+  render(<ConditionBadge rating="good" />);
+  expect(screen.getByText(/good/i)).toBeTruthy();
 });
 ```
 
@@ -201,12 +190,9 @@ Defaults in `src/providers/query-provider.tsx`: 5 min stale time, no refetch on 
 All hooks accept custom options:
 
 ```typescript
-const { data } = useCurrent(
-  { lat: -33.8568, lon: 151.2153 },
-  {
-    staleTime: 60000, // Override to 1 minute
-    onSuccess: (data) => console.log('Success!', data),
-  }
+const { data } = useForecast(
+  { lat: -33.8568, lon: 151.2153, days: 7 },
+  { staleTime: 60000 }
 );
 ```
 
@@ -224,7 +210,8 @@ export const API_CONFIG = {
 
 Create `.env` file:
 ```
-EXPO_PUBLIC_API_URL=https://api.example.com
+EXPO_PUBLIC_API_URL=http://192.168.0.4:5213
+EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
 ```
 
 ## Scripts
@@ -248,7 +235,7 @@ EXPO_PUBLIC_API_URL=https://api.example.com
 
 ## Resources
 
-- [Expo Documentation](https://docs.expo.dev/versions/v56.0.0/)
+- [Expo Documentation](https://docs.expo.dev/versions/v54.0.0/)
 - [React Native](https://reactnative.dev/)
 - [TanStack Query](https://tanstack.com/query/latest)
 - [React Native Testing Library](https://callstack.github.io/react-native-testing-library/)

@@ -85,7 +85,7 @@ The app **displays** ratings from the API when present. It does not re-run full 
 
 **Uncurated locations** (search/GPS with no curated spot match): API applies generic coastal rating (swell direction ≈ beach facing). See API **[SPOT_QUALITY.md](../../SwellCaster.API/SPOT_QUALITY.md)**.
 
-**Curated spots** (e.g. Warana, Alexandra Headland): API uses known `shoreBearing` from `curated-spots.json`.
+**Curated spots** (e.g. Warana, Alexandra Headland): API uses known `shoreBearing` from `curated-spots-australia.json` / `curated-spots-international.json` (synced to DB on API startup).
 
 Native fallback mirrors API hard rules:
 

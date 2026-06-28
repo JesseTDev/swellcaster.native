@@ -319,24 +319,22 @@ src/
 │   └── index.tsx                    # ✨ Landing page (MAIN FILE)
 │
 ├── components/
-│   ├── logo.tsx                     # ✨ Wave logo
-│   ├── location-header.tsx          # ✨ Location display
-│   ├── stat-card.tsx                # ✨ Metric cards
-│   ├── daily-forecast-card.tsx      # ✨ Daily forecast
+│   ├── logo.tsx                     # Wave logo
+│   ├── location-header.tsx          # Location display
+│   ├── forecast/                    # Shared forecast layout + daily cards
 │   │
 │   ├── charts/
-│   │   ├── wave-height-chart.tsx    # ✨ 24h chart
+│   │   ├── wave-height-chart.tsx    # 24h chart
+│   │   ├── tide-chart.tsx           # Tide chart (API sea level)
 │   │   └── index.ts
 │   │
-│   └── surf/
-│       ├── wave-card.tsx            # Wave data display
-│       ├── current-conditions.tsx   # Current conditions
-│       └── index.ts
+│   ├── map/                         # Surf map, markers, selection pin
+│   ├── condition-video/             # Record + play clips
+│   └── ui/                          # Forecast cards, badges, pickers
 │
 ├── hooks/api/
-│   ├── use-forecast.ts              # Forecast hook
-│   ├── use-current.ts               # Current hook
-│   └── ...
+│   ├── use-forecast.ts              # Combined forecast hook
+│   └── use-condition-videos.ts
 │
 └── services/api/
     ├── types.ts                     # TypeScript types
